@@ -1,0 +1,48 @@
+"""One-line rationale built from evidence only (a template, never an LLM)."""
+
+from __future__ import annotations
+
+from app.core.enums import Status
+from app.rules.schemas import QLChecklist
+
+MAX_LEN = 400
+
+
+def _clip(text: str, limit: int = 90) -> str:
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def build_rationale(status: Status, reason: str, checklist: QLChecklist | None) -> str:
+    if checklist is None:
+        return _clip(f"{status.value}: {reason}", MAX_LEN)
+    conds = checklist.first_four()
+    evidence = next(
+        (c.evidence[0] for c in (conds["C3"], conds["C4"]) if c.evidence and c.status == "pass"),
+        None,
+    )
+    if status == Status.QL:
+        line = "QL: all five conditions pass"
+    elif status == Status.QL_CANDIDATE:
+        gaps = checklist.unknown
+        line = (
+            "QL candidate: C1–C4 pass, awaiting sales acceptance"
+            if not gaps
+            else (f"QL candidate: accepted, but {', '.join(gaps)} unknown")
+        )
+    elif status == Status.DISQUALIFIED:
+        failing = checklist.failing or ["C5"]
+        details = "; ".join(
+            f"{name} {(conds.get(name) or checklist.c5_sales_acceptance).reason}"
+            for name in failing
+        )
+        line = f"Disqualified: {details}"
+    elif status == Status.NURTURE:
+        gaps = [*checklist.failing, *checklist.unknown]
+        line = f"Nurture: {', '.join(gaps)} not met" + (
+            f" ({conds['C4'].reason})" if "C4" in gaps else ""
+        )
+    else:
+        line = f"{status.value}: {reason}"
+    if evidence:
+        line += f". Evidence: {_clip(evidence)}"
+    return _clip(line, MAX_LEN)

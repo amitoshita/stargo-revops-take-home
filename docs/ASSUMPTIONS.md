@@ -18,6 +18,10 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 - **D3 — Felix Wagner.** No lead status: `needs review` is only for a failed analysis or an instruction attempt (QLS §5) and Felix has no inbound in the data. Not in the lead queue; appears as a CRM contact "accepted 2026-09-24 (earlier week)". PE-002 and PE-009 count as acquisition (deal created after acceptance).
 - **Pre-existing deal.** A deal counts as pre-existing when it was created before the person's first inbound and before their first acceptance (QLS §2). Compared by date in Asia/Jerusalem.
 
+- **Interest scale (Agent A).** `explicit_request` (asks for demo / pricing / pilot), `meeting_request` (asks for a call), `soft_positive` (open to a call, "happy to chat"), `none`, `declined`. Any of the first three satisfies C4 ("replies positively to an offer"); a call request is labelled intent `demo`.
+- **C3 / C4 when nothing is stated.** No problem stated → C3 `unknown`. A message with no request → C4 `fail` (the evidence exists and shows no ask). C5 with no decision → `unknown`.
+- **C2 function.** Marketing, HR, legal and communications roles fail C2 even at manager level (they do not own pricing, operations, procurement, commercial, finance or digital decisions). An owner/founder title needs a company under 200 employees; with size unknown, C2 is `unknown`.
+
 ## Identity and hygiene
 
 - **D16 — Several messages from one person.** Conditions use the union of evidence across messages, except interest (C4), which follows the person's latest stance: a later "not interested" overrides earlier interest (C4 fails → nurture), and a later positive message overrides an earlier "not interested". An unsubscribe in any message overrides everything (`suppressed`). An instruction attempt or a failed analysis in any message → `needs review`. Auto-reply excludes only if every message is an auto-reply.
@@ -29,6 +33,8 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 
 - **D4 — Owners for excluded / suppressed leads.** No owner, except investor → Founders. A suppression log is kept.
 - **D-add — Senders not in the CRM.** Region from the stated country, marked unverified. No country → Triage queue.
+- **Needs-review routing ignores message content.** When a message is flagged (instruction attempt or failed analysis), the owner comes from CRM / company-record facts only, never from facts stated in that message.
+- Consequence of D13: a stated country outside the ICP regions fails C1, so such a lead is `disqualified` (no owner). "Outside ICP regions → Triage queue" therefore applies to `needs review` leads and to leads whose region is unknown.
 - Region mapping: Benelux = NL, BE, LU; Nordics = SE, NO, DK, FI, IS; UK = GB; DACH = DE, AT, CH. APAC outside Singapore routes to Mei but is outside the ICP regions (C1 region fails).
 
 ## KPI
