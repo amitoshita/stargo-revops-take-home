@@ -16,10 +16,11 @@ def build_rationale(status: Status, reason: str, checklist: QLChecklist | None) 
     if checklist is None:
         return _clip(f"{status.value}: {reason}", MAX_LEN)
     conds = checklist.first_four()
-    evidence = next(
-        (c.evidence[0] for c in (conds["C3"], conds["C4"]) if c.evidence and c.status == "pass"),
-        None,
-    )
+    if status == Status.DISQUALIFIED and checklist.failing:
+        evidence_from = [conds[name] for name in checklist.failing]
+    else:
+        evidence_from = [c for c in (conds["C3"], conds["C4"]) if c.status == "pass"]
+    evidence = next((c.evidence[0] for c in evidence_from if c.evidence), None)
     if status == Status.QL:
         line = "QL: all five conditions pass"
     elif status == Status.QL_CANDIDATE:
