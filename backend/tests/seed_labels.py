@@ -86,7 +86,13 @@ LABELS: dict[str, AgentAOutput] = {
         interest_level="explicit_request",
         data_problem="wants document extraction at a second station",
         problem_category="document_extraction",
-        evidence=[{"field": "interest", "quote": "Please send pricing."}],
+        evidence=[
+            {
+                "field": "data_problem",
+                "quote": "The document extraction has been working well at our Dallas station",
+            },
+            {"field": "interest", "quote": "Please send pricing."},
+        ],
     ),
     "IN-007": _a(
         data_problem="PoC on bills of lading",
@@ -105,7 +111,7 @@ LABELS: dict[str, AgentAOutput] = {
     ),
     "IN-009": _a(
         intent="demo",
-        interest_level="soft_positive",
+        interest_level="meeting_request",
         buyer_role="runs logistics procurement",
         data_problem="benchmarking carrier quotes across ~2,000 tendered lanes is manual",
         problem_category="other",
@@ -122,7 +128,7 @@ LABELS: dict[str, AgentAOutput] = {
         buyer_role="Owner",
         data_problem="import declarations prepared manually from invoices and packing lists",
         problem_category="document_extraction",
-        company_facts={"employees": 40, "country": "Haifa", "vertical": "customs brokerage"},
+        company_facts={"employees": 40, "country": "Israel", "vertical": "customs brokerage"},
         evidence=[
             {"field": "company_facts", "quote": "I own a 40-person customs brokerage in Haifa"},
             {
@@ -209,7 +215,7 @@ LABELS: dict[str, AgentAOutput] = {
         ],
     ),
     "IN-020": _a(
-        intent="demo",
+        intent="other",
         interest_level="soft_positive",
         data_problem="manual booking entry",
         problem_category="document_extraction",

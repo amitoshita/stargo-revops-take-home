@@ -366,6 +366,16 @@ def test_routing_unknown_sender_by_stated_country(country: str | None, owner: st
     assert ("unverified" in result.owner_basis) == (country is not None)
 
 
+@pytest.mark.parametrize("city", ["Haifa", "Tel Aviv", "Ashdod", "a brokerage in Haifa"])
+def test_stated_israeli_city_becomes_israel_and_routes_to_noa(city: str) -> None:
+    item = extraction(company_facts={"employees": 40, "vertical": "customs brokerage",
+                                     "country": city})  # fmt: skip
+    assert item.company_facts.country == "Israel"  # Agent A output holds a country, not a city
+    result = assess(ctx([item]))
+    assert result.owner == "Noa"
+    assert "unverified" in result.owner_basis
+
+
 @pytest.mark.parametrize("country", ["Japan", "France"])
 def test_outside_icp_region_fails_c1_so_no_owner(country: str) -> None:
     facts = {"employees": 300, "vertical": "forwarder", "country": country}

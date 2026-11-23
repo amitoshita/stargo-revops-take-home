@@ -159,6 +159,24 @@ def country_from_text(value: str | None) -> str | None:
     return None
 
 
+def _country_names() -> dict[str, str]:
+    names: dict[str, str] = {}
+    for alias, code in _COUNTRY_ALIASES.items():
+        if len(alias) > 3:
+            names.setdefault(code, alias.title())
+    return names
+
+
+def stated_country_name(value: str | None) -> str | None:
+    """A stated location as a country name: 'Haifa' -> 'Israel'. Unrecognised text is kept."""
+    if value is None or not value.strip():
+        return None
+    if value.strip().lower().rstrip(".") in _COUNTRY_ALIASES:
+        return value.strip()
+    code = normalize_country(value) or country_from_text(value)
+    return _country_names().get(code, value.strip()) if code else value.strip()
+
+
 def region_for_country(country: str | None) -> Region | None:
     if country is None:
         return None

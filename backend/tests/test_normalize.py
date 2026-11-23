@@ -13,6 +13,7 @@ from app.ingest.normalize import (
     normalize_linkedin,
     normalize_vertical,
     region_for_country,
+    stated_country_name,
 )
 
 
@@ -119,3 +120,12 @@ def test_vertical() -> None:
     assert normalize_vertical("Freight Forwarder") == "freight-forwarder"
     assert normalize_vertical("customs brokerage") == "customs-broker"
     assert normalize_vertical("") is None
+
+
+@pytest.mark.parametrize(
+    ("stated", "name"),
+    [("Haifa", "Israel"), ("Rotterdam", "Netherlands"), ("London", "United Kingdom"),
+     ("Israel", "Israel"), ("UK", "UK"), ("Atlantis", "Atlantis"), ("  ", None), (None, None)],
+)  # fmt: skip
+def test_stated_country_name(stated: str | None, name: str | None) -> None:
+    assert stated_country_name(stated) == name

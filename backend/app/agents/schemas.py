@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.enums import AnalysisMode, Intent, ProblemCategory
+from app.ingest.normalize import stated_country_name
 from app.rules.schemas import Assessment
 
 InterestLevel = Literal["explicit_request", "meeting_request", "soft_positive", "none", "declined"]
@@ -31,9 +32,15 @@ class StatedFacts(_Strict):
 
     company_name: str | None = Field(default=None, max_length=120)
     employees: int | None = Field(default=None, ge=1, le=10_000_000)
-    country: str | None = Field(default=None, max_length=60)  # country or city as stated
+    country: str | None = Field(default=None, max_length=60)  # a country, never a city
     vertical: str | None = Field(default=None, max_length=60)
     is_software_vendor: bool = False  # e.g. "we build freight software too"
+
+    @field_validator("country")
+    @classmethod
+    def _city_to_country(cls, value: str | None) -> str | None:
+        # Whatever produced the output (LLM or fallback), a stated city becomes its country.
+        return stated_country_name(value)
 
 
 class AgentAOutput(_Strict):
