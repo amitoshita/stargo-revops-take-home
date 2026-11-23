@@ -502,3 +502,32 @@ def test_unverified_company_facts_score_half() -> None:
 def test_high_score_never_promotes_status() -> None:
     result = assess(ctx([extraction()]))  # perfect signals, no acceptance
     assert result.status == Status.QL_CANDIDATE and (result.score or 0) >= 70
+
+
+# ---- vertical: unrecognised is unknown, never a fail -------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("vertical", "c1", "status"),
+    [
+        ("logistics", "pass", Status.QL_CANDIDATE),
+        ("widget services", "unknown", Status.NURTURE),
+        ("software vendor", "fail", Status.DISQUALIFIED),
+        ("consulting", "fail", Status.DISQUALIFIED),
+    ],
+)
+def test_vertical_unknown_is_never_a_fail(vertical: str, c1: str, status: Status) -> None:
+    facts = {"employees": 80, "country": "Israel", "vertical": vertical}
+    result = assess(ctx([extraction(company_facts=facts)]))
+    assert result.checklist is not None
+    assert result.checklist.c1_company_fit.status == c1
+    assert result.status == status
+    if c1 == "unknown":
+        assert "not recognised" in result.checklist.c1_company_fit.reason
+        assert result.owner == "Noa"
+
+
+def test_unknown_vertical_accepted_stays_ql_candidate() -> None:
+    facts = {"employees": 80, "country": "Israel", "vertical": "widget services"}
+    result = assess(ctx([extraction(company_facts=facts)], decisions=[decision()]))
+    assert result.status == Status.QL_CANDIDATE  # D14: accepted with an unknown, never a fail

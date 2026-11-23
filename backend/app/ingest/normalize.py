@@ -203,7 +203,48 @@ _VERTICAL_ALIASES: dict[str, str] = {
     "customs-broker": "customs-broker", "customs-brokerage": "customs-broker",
     "shipper": "shipper", "retail": "shipper", "manufacturer": "shipper",
     "trade-finance": "trade-finance",
+    # ICP synonyms (a vocabulary gap must never lose a real lead)
+    "logistics": "3pl", "logistics-company": "3pl", "logistics-services": "3pl",
+    "logistics-service-provider": "3pl", "contract-logistics": "3pl", "warehousing": "3pl",
+    "freight-company": "freight-forwarder", "forwarding": "freight-forwarder",
+    "forwarding-company": "freight-forwarder", "freight-forwarding-company": "freight-forwarder",
+    "spedition": "freight-forwarder", "nvocc": "freight-forwarder",
+    "shipping-company": "carrier", "shipping": "carrier", "container-shipping": "carrier",
+    "transport": "trucking", "transport-company": "trucking", "transportation": "trucking",
+    "haulage-company": "trucking", "haulier": "trucking", "hauler": "trucking",
+    "road-transport": "trucking", "trucking-company": "trucking",
+    "cargo-handling": "ground-handling", "cargo-handler": "ground-handling",
+    "air-freight": "air-cargo", "airfreight": "air-cargo",
+    "customs": "customs-broker", "customs-agent": "customs-broker",
 }  # fmt: skip
+
+# Categories that are clearly outside the ICP. Only these make C1 fail on vertical; any other
+# unrecognised vertical is unknown (QLS §3: unknown stays unknown).
+NON_ICP_VERTICALS: frozenset[str] = frozenset(
+    {
+        "software-vendor", "software", "saas", "consulting", "education", "investor",
+        "agency", "recruiting", "media", "student",
+    }
+)  # fmt: skip
+_NON_ICP_WORDS: list[tuple[str, re.Pattern[str]]] = [
+    ("software-vendor", re.compile(r"\b(software|saas|platform vendor|tech vendor|it services)\b")),
+    ("consulting", re.compile(r"\b(consult\w*|advisory)\b")),
+    ("education", re.compile(r"\b(education|university|school|college|academy)\b")),
+    ("investor", re.compile(r"\b(venture capital|vc|private equity|investor|investment fund)\b")),
+    ("agency", re.compile(r"\b(marketing|advertising|pr|creative|digital) agency\b")),
+    ("recruiting", re.compile(r"\b(recruit\w*|staffing|headhunt\w*)\b")),
+]
+_ICP_WORDS: list[tuple[str, re.Pattern[str]]] = [
+    ("customs-broker", re.compile(r"\bcustoms\b")),
+    ("trade-finance", re.compile(r"\btrade finance\b")),
+    ("air-cargo", re.compile(r"\b(air cargo|air freight|airfreight)\b")),
+    ("ground-handling", re.compile(r"\b(ground handl\w*|cargo handl\w*)\b")),
+    ("freight-forwarder", re.compile(r"\b(forward\w*|spedition|nvocc)\b")),
+    ("trucking", re.compile(r"\b(truck\w*|haul\w*|road transport|transport(ation)?)\b")),
+    ("carrier", re.compile(r"\b(shipping line|shipping|ocean carrier|carrier)\b")),
+    ("3pl", re.compile(r"\b(3pl|logistics|warehous\w*|fulfil+ment)\b")),
+    ("freight-forwarder", re.compile(r"\bfreight\b")),
+]
 
 ICP_VERTICALS: frozenset[str] = frozenset(
     {
@@ -230,6 +271,13 @@ def normalize_vertical(value: str | None) -> str | None:
     slug = re.sub(r"[\s_/]+", "-", value.strip().lower())
     if slug in _VERTICAL_ALIASES:
         return _VERTICAL_ALIASES[slug]
-    if _SHIPPER_WORDS.search(slug.replace("-", " ").replace("e commerce", "ecommerce")):
+    words = slug.replace("-", " ").replace("e commerce", "ecommerce")
+    for vertical, pattern in _NON_ICP_WORDS:  # "freight software" is a software vendor
+        if pattern.search(words):
+            return vertical
+    if _SHIPPER_WORDS.search(words):
         return "shipper"
+    for vertical, pattern in _ICP_WORDS:
+        if pattern.search(words):
+            return vertical
     return slug

@@ -149,3 +149,20 @@ def test_freight_buyers_map_to_shipper(stated: str, vertical: str) -> None:
 )  # fmt: skip
 def test_stated_country_name(stated: str | None, name: str | None) -> None:
     assert stated_country_name(stated) == name
+
+
+@pytest.mark.parametrize(
+    ("stated", "vertical"),
+    [
+        ("logistics", "3pl"), ("Logistics provider", "3pl"), ("logistics company", "3pl"),
+        ("3PL", "3pl"), ("shipping company", "carrier"), ("freight company", "freight-forwarder"),
+        ("forwarding", "freight-forwarder"), ("Spedition", "freight-forwarder"),
+        ("transport company", "trucking"), ("haulage company", "trucking"),
+        ("cargo handling", "ground-handling"), ("customs agency", "customs-broker"),
+        ("international freight forwarding and logistics", "freight-forwarder"),
+        ("logistics software", "software-vendor"), ("freight consulting", "consulting"),
+        ("widget services", "widget-services"),
+    ],
+)  # fmt: skip
+def test_icp_synonyms_and_non_icp_categories(stated: str, vertical: str) -> None:
+    assert normalize_vertical(stated) == vertical

@@ -13,6 +13,7 @@ from app.core.enums import ICP_REGIONS, SOLVED_PROBLEMS, ProblemCategory, Region
 from app.core.timeutil import to_il
 from app.ingest.normalize import (
     ICP_VERTICALS,
+    NON_ICP_VERTICALS,
     country_from_text,
     display_country,
     normalize_country,
@@ -130,9 +131,11 @@ def company_fit(ctx: LeadContext) -> QLCondition:
         unknowns.append("vertical")
     else:
         parts.append(f"vertical {vertical.value} ({vertical.label()})")
-        if vertical.value not in ICP_VERTICALS:
+        if vertical.value in NON_ICP_VERTICALS:
             fails.append(f"vertical {vertical.value} is not an ICP vertical")
             failed_on.append("vertical")
+        elif vertical.value not in ICP_VERTICALS:
+            unknowns.append(f"vertical ('{vertical.value}' not recognised)")
     if employees is None:
         unknowns.append("company size")
     else:
