@@ -21,7 +21,8 @@ def _week_label(pack: KpiPack) -> str:
     return f"Sun {pack.week_start:%-d %b} – Thu {pack.week_end:%-d %b %Y} ({pack.timezone})"
 
 
-def render(pack: KpiPack, cro_note: str | None = None) -> str:
+def render(pack: KpiPack, cro_note: str | None = None, extra: str | None = None) -> str:
+    """`extra` is an optional pre-rendered markdown block (the AI visibility section)."""
     lines = [
         "# Weekly KPI pack",
         "",
@@ -72,6 +73,8 @@ def render(pack: KpiPack, cro_note: str | None = None) -> str:
 
     lines += ["", "## Caveats", ""]
     lines += [f"- {c}" for c in pack.caveats] or ["- None."]
+    if extra:
+        lines += ["", extra.strip()]
     lines += ["", CRO_HEADING, "", (cro_note or CRO_PLACEHOLDER).strip(), ""]
     return "\n".join(lines)
 
@@ -86,7 +89,7 @@ def existing_cro_note(path: Path) -> str | None:
     return None if not note or note == CRO_PLACEHOLDER else note
 
 
-def export(pack: KpiPack, path: Path) -> str:
-    content = render(pack, existing_cro_note(path))
+def export(pack: KpiPack, path: Path, extra: str | None = None) -> str:
+    content = render(pack, existing_cro_note(path), extra)
     path.write_text(content, encoding="utf-8")
     return content

@@ -55,3 +55,12 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 ## AI visibility
 
 - **D10 — Top gap P6** ("alternatives to Laneframe") gets the brief, under BC-5: the competitor name only in the title and FAQ questions.
+
+## AI visibility (GEO)
+
+- **Gap formula (plan §6).** gap = priority × Σ over engines of g(state) × fit; g: owned 0, mentioned without an owned citation 0.5, absent 1, wrong claim 1.5; fit = 1 if a BC-3 product answers the need, else 0. Ties: more competitors present first. P8 (rate benchmarking for shippers) scores 0: no BC-3 product, so it is not a content gap.
+- **Owned citation** = host is `stargo.co` or a subdomain. A host that merely contains "stargo" (stargo-shipping.com, stargo-travel.example) is a look-alike and goes to the risk table.
+- **A mention by another company named StarGo counts as a mention with a wrong claim** (P5-CHA), not as absent: the engine tells buyers something false about "Stargo".
+- **Unknown vendors** not in `known_competitors` (e.g. "ClearDoc Trade" in P4-CHA) are not detected; only the listed competitors are tracked.
+- **Brief generation.** The LLM gets the buyer's question and the approved claims library only. Groq's JSON mode sometimes rejects long outputs (`json_validate_failed`); the brief then retries once without JSON mode and parses the reply itself. Schema validation and the claim validator apply either way.
+- **Claim validator limits.** It blocks untagged claims, unknown refs, figures not in the cited claims, competitors outside the title / FAQ questions, customer lists and BC-5 category claims; it warns on hype words and on claims sharing no words with their sources. It does not check meaning: a paraphrase that goes slightly beyond its source (e.g. "eliminates manual lookup steps" tagged BC-3a) passes. A human reviews before publishing.

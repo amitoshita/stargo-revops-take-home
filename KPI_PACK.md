@@ -1,7 +1,7 @@
 # Weekly KPI pack
 
 **Week:** Sun 4 Oct – Thu 8 Oct 2026 (Asia/Jerusalem)  
-**Generated:** 2026-11-23 09:55 IL  
+**Generated:** 2026-11-23 10:05 IL  
 **Analysis mode:** recorded fixture
 
 ## Acquisition vs target
@@ -54,6 +54,25 @@
 
 - Feed 'historical-reactivation' was not received: its numbers are unknown, and totals may be understated.
 - 2 lead(s) in needs review are not counted until decided.
+
+## AI visibility (GEO)
+
+Gap formula: gap = priority × Σ over engines of g(state) × fit; g: owned 0, mentioned without owned citation 0.5, absent 1, wrong claim 1.5; fit = 1 if a BC-3 product answers the need, else 0; ties broken by number of competitors present.
+
+| Rank | Prompt | Score | ChatGPT | Perplexity | Gemini |
+|---:|---|---:|---|---|---|
+| 1 | P6 alternatives to Laneframe for freight pricing | 9 | absent | absent | absent |
+| 2 | P2 how can a freight forwarder extract data from bills of lading automatically | 7.5 | absent | mentioned unowned | absent |
+| 3 | P1 best AI tools to automate freight spot quoting from email | 6 | absent | owned | absent |
+
+Brand-accuracy risks:
+
+- P2-PER: cites look-alike domain stargo-shipping.com
+- P5-CHA: BC-5 (not a travel company): StarGo is a holiday booking app with mixed reviews about refunds and customer service.
+- P5-CHA: cites look-alike domain stargo-travel.example
+- P5-GEM: BC-5 (not a carrier): Stargo is an ocean carrier headquartered in Rotterdam offering container shipping between Europe and Asia.
+
+Content brief for the top gap (P6): 'Alternatives to Laneframe for Freight Pricing – Stargo’s Rate Quoting Agent' (recorded fixture, publishable, 0 flag(s)).
 
 ## Note to the CRO
 

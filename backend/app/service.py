@@ -17,12 +17,24 @@ from typing import Any, Literal
 
 from app.agents.agent_b import build_agent_b, wants_draft
 from app.agents.analyzer import analyze_message
-from app.agents.fixtures import FixtureStore
+from app.agents.fixtures import FixtureStore, RecordedReply, message_hash
 from app.agents.llm_client import GroqClient, LLMClient
 from app.agents.schemas import AgentAOutput, AgentBOutput, MessageAnalysis
 from app.core.config import Settings
 from app.core.enums import AnalysisMode, Status
 from app.core.timeutil import now_il, parse_aware
+from app.geo.brief import (
+    BRIEF_PROMPT_VERSION,
+    assemble,
+    build_user,
+    generate_brief,
+    parse_brief,
+    template_brief,
+)
+from app.geo.claims import load_claims
+from app.geo.report import build_report, competitors
+from app.geo.report import render_markdown as render_geo
+from app.geo.schemas import ContentBrief, ContentBriefDraft, GeoReport
 from app.ingest.identity import Person
 from app.ingest.loader import load_seed
 from app.ingest.schemas import InboundMessage, IngestError, SalesDecision
@@ -40,6 +52,8 @@ log = logging.getLogger(__name__)
 ANALYSIS = "analysis"
 DRAFT = "agent_b"
 KPI = "kpi_pack"
+GEO = "geo_report"
+BRIEF = "geo_brief"
 MODE_LABEL = {True: "llm", False: "rules-only fallback mode"}
 
 
@@ -238,10 +252,93 @@ class Service:
         return pack
 
     def kpi_markdown(self, week: date) -> str:
-        return render(self.kpi(week))
+        return render(self.kpi(week), extra=self._geo_markdown())
 
     def export_kpi(self, week: date, path: Path) -> str:
-        return export(self.kpi(week), path)
+        return export(self.kpi(week), path, extra=self._geo_markdown())
+
+    # ---- GEO --------------------------------------------------------------------
+    @property
+    def _answers_path(self) -> Path:
+        return self.settings.data_dir / "ai_answers.json"
+
+    @property
+    def _claims(self) -> dict[str, str]:
+        return load_claims(self.settings.data_dir / "brand_context.md")
+
+    def geo_report(self) -> GeoReport:
+        report = build_report(self._answers_path)
+        self.repo.put_doc(GEO, "latest", report)
+        return report
+
+    def brief(self) -> ContentBrief:
+        """The stored brief for the top gap; else the recorded LLM brief; else the template."""
+        top = self.geo_report().gaps[0]
+        stored = self.repo.get_doc(BRIEF, top.prompt_id, ContentBrief)
+        if stored is not None:
+            return stored
+        brief = self._recorded_brief(top.prompt_id) or self._template_brief(top.prompt_id)
+        self.repo.put_doc(BRIEF, top.prompt_id, brief)
+        return brief
+
+    def regenerate_brief(self) -> ContentBrief:
+        """Explicit human action: a live LLM brief if a key is set, else the template."""
+        top = self.geo_report().gaps[0]
+        if self.client is None:
+            brief = self._template_brief(top.prompt_id)
+        else:
+            result, _ = generate_brief(self.client, top, self._claims)
+            if isinstance(result, str):
+                brief = self._template_brief(top.prompt_id, note=f"LLM brief unusable: {result}")
+            else:
+                brief = self._assemble(result, top.prompt_id, "llm", self.client.model)
+        self.repo.put_doc(BRIEF, top.prompt_id, brief)
+        return brief
+
+    def brief_fixture_path(self, prompt_id: str) -> Path:
+        return self.settings.fixtures_dir / "geo" / f"brief_{prompt_id}.json"
+
+    def brief_input_hash(self, prompt_id: str) -> str:
+        gap = next(g for g in self.geo_report().gaps if g.prompt_id == prompt_id)
+        return message_hash(BRIEF_PROMPT_VERSION, build_user(gap, self._claims))
+
+    def _recorded_brief(self, prompt_id: str) -> ContentBrief | None:
+        path = self.brief_fixture_path(prompt_id)
+        if not path.is_file():
+            return None
+        recorded = RecordedReply.model_validate_json(path.read_text(encoding="utf-8"))
+        if recorded.raw is None or recorded.message_sha256 != self.brief_input_hash(prompt_id):
+            return None
+        result = parse_brief(recorded.raw)
+        if isinstance(result, str):
+            return self._template_brief(prompt_id, note=f"recorded LLM brief unusable: {result}")
+        return self._assemble(result, prompt_id, "recorded fixture", recorded.model)
+
+    def _template_brief(self, prompt_id: str, note: str | None = None) -> ContentBrief:
+        gap = next(g for g in self.geo_report().gaps if g.prompt_id == prompt_id)
+        return self._assemble(template_brief(gap, self._claims), prompt_id, "template", None, note)
+
+    def _assemble(
+        self,
+        draft: ContentBriefDraft,
+        prompt_id: str,
+        mode: Literal["llm", "recorded fixture", "template"],
+        model: str | None,
+        note: str | None = None,
+    ) -> ContentBrief:
+        return assemble(
+            draft,
+            prompt_id=prompt_id,
+            mode=mode,
+            model=model,
+            claims=self._claims,
+            competitors=competitors(self._answers_path),
+            generated_at=now_il(),
+            note=note,
+        )
+
+    def _geo_markdown(self) -> str:
+        return render_geo(self.geo_report(), self.brief())
 
     # ---- logs and side lists ------------------------------------------------------
     def suppression_log(self) -> list[dict[str, Any]]:

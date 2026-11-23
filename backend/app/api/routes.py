@@ -21,6 +21,7 @@ from app.api.schemas import (
     SuppressionRow,
 )
 from app.api.views import lead_detail, lead_row, lead_rows
+from app.geo.schemas import ContentBrief, GeoReport
 from app.ingest.schemas import SalesDecision
 from app.kpi.schemas import KpiPack
 from app.kpi.window import WEEK_UNDER_REVIEW
@@ -100,3 +101,18 @@ def crm_activity(service: ServiceDep) -> list[CrmActivityRow]:
 @router.get("/ingest-errors")
 def ingest_errors(service: ServiceDep) -> IngestErrorsOut:
     return IngestErrorsOut(errors=service.ingest_errors())
+
+
+@router.get("/geo")
+def geo(service: ServiceDep) -> GeoReport:
+    return service.geo_report()
+
+
+@router.get("/geo/brief")
+def geo_brief(service: ServiceDep) -> ContentBrief:
+    return service.brief()
+
+
+@router.post("/geo/brief", status_code=201)
+def regenerate_geo_brief(service: ServiceDep) -> ContentBrief:
+    return service.regenerate_brief()
