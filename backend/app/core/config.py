@@ -9,7 +9,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 DEFAULT_LLM_BASE_URL = "https://api.groq.com/openai/v1"
-DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_LLM_MODEL = "openai/gpt-oss-120b"
 
 
 def _load_dotenv(path: Path) -> None:

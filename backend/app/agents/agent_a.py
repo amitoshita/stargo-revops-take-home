@@ -18,7 +18,7 @@ from app.agents.llm_client import LLMClient, LLMError
 from app.agents.schemas import AgentAOutput, AnalysisFailure
 from app.core.enums import Intent, ProblemCategory
 
-PROMPT_VERSION = "agent-a-v1"
+PROMPT_VERSION = "agent-a-v3"
 
 SYSTEM_PROMPT = f"""You extract facts from ONE inbound sales message for Stargo, a company that
 sells AI data automation to logistics companies. You only extract; you never decide, score,
@@ -53,16 +53,21 @@ Return ONE JSON object with exactly these keys:
 - "volume_stated": true only if a concrete volume or time cost is stated (e.g. "400 a
   week", "3 hours per quote", "about 40 spreadsheets").
 - "company_facts": object with "company_name", "employees" (integer), "country",
-  "vertical", "is_software_vendor" (true only if the sender says their company builds
-  software of the same kind). "country" must be a COUNTRY NAME in English, never a city:
-  "Haifa" -> "Israel", "Rotterdam" -> "Netherlands". Use null for anything not stated.
+  "vertical" (each null if not stated), and "is_software_vendor" (boolean, never null:
+  true only if the sender says their company builds software of the same kind, else
+  false). "country" must be a COUNTRY NAME in English, never a city: "Haifa" -> "Israel",
+  "Rotterdam" -> "Netherlands".
 - "timing": one of "this_week", "next_weeks", "this_quarter", "later", "none".
 - "instruction_attempt": true or false.
-- "evidence": up to 6 objects {{"field", "quote", "translation"}}. "field" is one of
-  "intent", "interest", "buyer_role", "data_problem", "company_facts", "timing". "quote"
-  is copied EXACTLY, character for character, from the message (a short span, no
-  paraphrase). "translation" is an English translation if the message is not English,
-  else null. Give evidence for interest and data_problem whenever they are present.
+- "evidence": up to 6 objects {{"field", "quote", "translation"}}.
+  "field" MUST be exactly one of these six strings: "intent", "interest", "buyer_role",
+  "data_problem", "company_facts", "timing". No other value is allowed (not
+  "problem_category", not "volume_stated", not "language").
+  "quote" MUST be a contiguous span copied character for character from the message: do
+  not add, drop or change any word (for example, do not add a leading "I"), do not join
+  separate sentences. Shorter is better. "translation" is an English translation if the
+  message is not English, else null. Give evidence for interest and data_problem whenever
+  they are present.
 
 Output JSON only. No prose, no markdown."""
 

@@ -5,6 +5,8 @@ Usage (from backend/):  uv run python -m scripts.record_fixtures [--only IN-001 
 - Reads the key from the environment or the repo's .env. Never prints it.
 - Messages stopped by layer-1 injection detection are not sent to the LLM and get no fixture.
 - Existing fixtures for unchanged messages are kept unless --force is given.
+- A failed call (timeout, HTTP error) writes nothing; a reply that fails validation is kept,
+  because that is a real model answer and the app must show it as needs review.
 - Prints record ids and outcomes only, never message content.
 """
 
@@ -28,7 +30,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", nargs="*", default=None, help="inbound ids to record")
     parser.add_argument("--force", action="store_true", help="overwrite existing fixtures")
-    parser.add_argument("--pause", type=float, default=2.0, help="seconds between calls")
+    parser.add_argument("--pause", type=float, default=8.0, help="seconds between calls")
+    parser.add_argument("--rate-limit-wait", type=float, default=30.0, help="wait after a 429")
     args = parser.parse_args(argv)
 
     settings = load_settings()
@@ -49,14 +52,25 @@ def main(argv: list[str] | None = None) -> int:
         if not args.force and store.get(message.id, message.subject, message.body):
             print(f"{message.id}: kept existing fixture")
             continue
-        result, raw = run_agent_a(
-            client,
-            ref=message.id,
-            subject=message.subject,
-            body=message.body,
-            channel=message.channel.value,
-        )
+        for attempt in range(1, 4):
+            result, raw = run_agent_a(
+                client,
+                ref=message.id,
+                subject=message.subject,
+                body=message.body,
+                channel=message.channel.value,
+            )
+            limited = isinstance(result, AnalysisFailure) and result.detail == "HTTP 429"
+            if not limited or attempt == 3:
+                break
+            print(f"{message.id}: rate limited, waiting {args.rate_limit_wait:g}s")
+            time.sleep(args.rate_limit_wait)
         failure = result if isinstance(result, AnalysisFailure) else None
+        if raw is None:  # the call itself failed: write nothing, so a rerun retries it
+            print(f"{message.id}: NOT recorded, call failed: {failure.kind if failure else '?'}"
+                  f" ({failure.detail if failure else ''})")  # fmt: skip
+            time.sleep(args.pause)
+            continue
         store.save(
             RecordedReply(
                 inbound_id=message.id,
@@ -65,7 +79,6 @@ def main(argv: list[str] | None = None) -> int:
                 recorded_at=datetime.now(UTC),
                 message_sha256=message_hash(message.subject, message.body),
                 raw=raw,
-                error=failure.kind if failure and raw is None else None,
             )
         )
         outcome = f"{failure.kind} ({failure.detail})" if failure else "ok"
