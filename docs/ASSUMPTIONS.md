@@ -51,7 +51,7 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 ## LLM and fallback
 
 - **D6 — No-key mode.** Agent A outputs for the 21 seed inbound are recorded fixtures: captured once from the real LLM, committed, labelled "recorded fixture", regenerated with a script. Pasted messages use the rules-only fallback when there is no key.
-- **D11 — Provider.** Groq free tier, `llama-3.3-70b-versatile`.
+- **D11 — Provider.** Groq free tier. The plan chose Groq `llama-3.3-70b-versatile`; Groq retired it (HTTP 404, "model does not exist"), so the app uses Groq `openai/gpt-oss-120b`. The provider decision is unchanged.
 - Rationale is a code template built from evidence only. GEO wrong-claim detection is code only.
 
 ## AI visibility
