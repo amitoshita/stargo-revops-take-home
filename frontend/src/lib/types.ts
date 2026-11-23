@@ -133,6 +133,7 @@ export interface Draft {
   reply_draft: string | null
   draft_mode: AnalysisMode | null
   draft_requires_human_approval: true
+  draft_flags: string[]
 }
 
 export interface Message {

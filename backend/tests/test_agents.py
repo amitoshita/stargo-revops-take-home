@@ -368,7 +368,7 @@ def test_unsafe_llm_draft_falls_back_to_template(reply: str) -> None:
         "HS-1001", assessment, latest, first_name="Anouk", client=FakeLLM(reply=reply)
     )
     assert output.draft_mode == AnalysisMode.RULES_ONLY
-    assert output.reply_draft is not None and check_draft(output.reply_draft) is None
+    assert output.reply_draft is not None and check_draft(output.reply_draft) == []
 
 
 def test_llm_error_falls_back_to_template() -> None:
@@ -381,10 +381,64 @@ def test_llm_error_falls_back_to_template() -> None:
 def test_template_draft_is_safe_for_every_category() -> None:
     for label in LABELS.values():
         if label.interest_level in ("explicit_request", "meeting_request", "soft_positive"):
-            assert check_draft(template_draft("Sam", "Leo", label)) is None
-            assert check_draft(template_draft(None, "Triage queue", label)) is None
+            assert check_draft(template_draft("Sam", "Leo", label)) == []
+            assert check_draft(template_draft(None, "Triage queue", label)) == []
 
 
 def test_wants_draft_requires_extraction() -> None:
     assessment, _ = _seed_case("HS-1001")
     assert not wants_draft(assessment, None)
+
+
+# ---- drafts follow BC-5 and the lead's language ------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("reply", "reason"),
+    [
+        (
+            "Hi Anouk,\n\nOur agent eliminates manual entry for your team.\n\nDana",
+            "outcome promise",
+        ),
+        ("Hi,\n\nWe guarantee faster quotes.\n\nDana", "outcome promise"),
+        ("Hi,\n\nAcme uses Stargo for this.\n\nDana", "customer names"),
+        ("Hi,\n\nWe cut quoting time by 70 percent.\n\nDana", "figure not in an approved"),
+        ("Hi,\n\nאנחנו מבטיחים תוצאות.\n\nDana", "outcome promise"),
+    ],
+)
+def test_unsupported_draft_claims_fall_back_with_a_visible_reason(reply: str, reason: str) -> None:
+    assessment, latest = _seed_case("HS-1001")
+    output = build_agent_b("HS-1001", assessment, latest, first_name="Anouk",
+                           client=FakeLLM(reply=reply))  # fmt: skip
+    assert output.draft_mode == AnalysisMode.RULES_ONLY
+    assert any(reason in f for f in output.draft_flags), output.draft_flags
+    assert output.reply_draft is not None and "eliminat" not in output.reply_draft
+
+
+def test_draft_may_quote_its_proof_point_and_mention_a_call_length() -> None:
+    assessment, latest = _seed_case("HS-1001")  # rate quoting -> PP-1
+    reply = (
+        "Hi Anouk,\n\nIn a pilot, a European forwarder cut median spot-quote turnaround "
+        "from about 3 hours to under 15 minutes. Could we find 30 minutes next week?\n\nDana"
+    )
+    output = build_agent_b("HS-1001", assessment, latest, first_name="Anouk",
+                           client=FakeLLM(reply=reply))  # fmt: skip
+    assert output.draft_mode == AnalysisMode.LLM and output.draft_flags == []
+
+
+def test_hebrew_lead_gets_a_hebrew_draft_prompt() -> None:
+    assessment, latest = _seed_case("HS-1017")  # Noam, Hebrew message
+    assert latest is not None and latest.language == "he"
+    llm = FakeLLM(reply="שלום נועם,\n\nנשמח לשיחה השבוע.\n\nNoa, Stargo")
+    output = build_agent_b("HS-1017", assessment, latest, first_name="Noam", client=llm)
+    system, user = llm.calls[0]
+    assert "Write in Hebrew (he)" in system
+    assert json.loads(user)["language_code"] == "he"
+    assert output.draft_mode == AnalysisMode.LLM
+
+
+def test_non_english_template_fallback_says_so() -> None:
+    assessment, latest = _seed_case("HS-1017")
+    output = build_agent_b("HS-1017", assessment, latest, first_name="Noam", client=None)
+    assert output.draft_mode == AnalysisMode.RULES_ONLY
+    assert output.draft_flags == ["template is in English; the lead wrote in he"]

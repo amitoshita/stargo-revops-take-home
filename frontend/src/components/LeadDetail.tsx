@@ -260,6 +260,15 @@ function DraftPanel({ detail, onChange }: { detail: Detail; onChange: () => void
             <Badge tone="warn">needs human approval · not sent</Badge>
             {draft.draft_mode && <ModeBadges modes={[draft.draft_mode]} />}
           </div>
+          {draft.draft_flags.length > 0 && (
+            <ul className="flags">
+              {draft.draft_flags.map((f) => (
+                <li key={f} className="flag-warn small">
+                  {f}
+                </li>
+              ))}
+            </ul>
+          )}
           <pre className="draft">{draft.reply_draft}</pre>
         </>
       ) : (

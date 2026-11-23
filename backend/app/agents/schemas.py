@@ -114,3 +114,4 @@ class AgentBOutput(_Strict):
     reply_draft: str | None = Field(default=None, max_length=1200)
     draft_mode: AnalysisMode | None = None
     draft_requires_human_approval: Literal[True] = True
+    draft_flags: list[str] = Field(default_factory=list)  # why the template was used
