@@ -23,7 +23,7 @@ export function LeadQueue({ rows }: { rows: LeadRow[] }) {
           {rows.map((row) => (
             <tr key={row.person_id}>
               <td>
-                <a href={href({ view: 'lead', personId: row.person_id })}>
+                <a href={href({ view: 'lead', personId: row.person_id })} dir="auto">
                   {row.name ?? row.person_id}
                 </a>
                 {row.message_count > 1 && <span className="muted"> ({row.message_count} msgs)</span>}

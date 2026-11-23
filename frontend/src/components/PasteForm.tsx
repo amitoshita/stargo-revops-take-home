@@ -64,7 +64,7 @@ export function PasteForm({ onAdded }: { onAdded: () => void }) {
       </p>
       <label>
         Name
-        <input value={form.from_name} onChange={set('from_name')} />
+        <input dir="auto" value={form.from_name} onChange={set('from_name')} />
       </label>
       <label>
         Email
@@ -101,11 +101,11 @@ export function PasteForm({ onAdded }: { onAdded: () => void }) {
       </label>
       <label>
         Subject
-        <input value={form.subject} onChange={set('subject')} />
+        <input dir="auto" value={form.subject} onChange={set('subject')} />
       </label>
       <label>
         Message text
-        <textarea rows={6} value={form.body} onChange={set('body')} />
+        <textarea rows={6} dir="auto" value={form.body} onChange={set('body')} />
       </label>
       <button type="submit" disabled={busy}>
         {busy ? 'Analysing…' : 'Add message'}

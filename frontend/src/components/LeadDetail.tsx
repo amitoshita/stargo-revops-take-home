@@ -17,7 +17,7 @@ export function LeadDetailView({ detail, onChange }: { detail: Detail; onChange:
   return (
     <div className="stack">
       <section className="card">
-        <h1>{detail.name ?? detail.person_id}</h1>
+        <h1 dir="auto">{detail.name ?? detail.person_id}</h1>
         <p className="muted">
           {detail.company ?? 'Company unknown'}
           {detail.company_source === 'stated' && ' (stated, unverified)'} · {detail.person_id}
@@ -111,9 +111,13 @@ function MessageCard({ message }: { message: Message }) {
         {message.id} · {message.channel.replace('_', ' ')} · {formatIL(message.received_at)} ·
         source {message.source ?? 'not recorded'}
       </header>
-      {message.subject && <p className="subject">{message.subject}</p>}
+      {message.subject && (
+        <p className="subject" dir="auto">
+          {message.subject}
+        </p>
+      )}
       {/* Rendered as text, never as HTML: message content is untrusted. */}
-      <blockquote>{message.body}</blockquote>
+      <blockquote dir="auto">{message.body}</blockquote>
       {analysis && (
         <div className="analysis">
           <div className="badges">
@@ -147,10 +151,11 @@ function ExtractionView({ extraction: e }: { extraction: Extraction }) {
         {e.intent} ({e.interest_level.replace('_', ' ')})
       </dd>
       <dt>Role</dt>
-      <dd>{e.buyer_role ?? '—'}</dd>
+      <dd dir="auto">{e.buyer_role ?? '—'}</dd>
       <dt>Problem</dt>
       <dd>
-        {e.data_problem ?? '—'} <span className="muted">[{e.problem_category}]</span>
+        <span dir="auto">{e.data_problem ?? '—'}</span>{' '}
+        <span className="muted">[{e.problem_category}]</span>
       </dd>
       <dt>Stated facts</dt>
       <dd>{facts.length ? facts.map(([k, v]) => `${k}: ${String(v)}`).join(' · ') : '—'}</dd>
@@ -161,8 +166,13 @@ function ExtractionView({ extraction: e }: { extraction: Extraction }) {
         <ul className="evidence">
           {e.evidence.map((ev, i) => (
             <li key={i}>
-              <span className="muted">{ev.field}:</span> “{ev.quote}”
-              {ev.translation && <span className="muted"> ({ev.translation})</span>}
+              <span className="muted">{ev.field}:</span> <q dir="auto">{ev.quote}</q>
+              {ev.translation && (
+                <span className="muted">
+                  {' '}
+                  (<span dir="auto">{ev.translation}</span>)
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -185,7 +195,9 @@ function ChecklistTable({ checklist }: { checklist: Checklist }) {
               {c.evidence.length > 0 && (
                 <ul className="evidence">
                   {c.evidence.map((ev, i) => (
-                    <li key={i}>{ev}</li>
+                    <li key={i} dir="auto">
+                      {ev}
+                    </li>
                   ))}
                 </ul>
               )}
@@ -269,7 +281,9 @@ function DraftPanel({ detail, onChange }: { detail: Detail; onChange: () => void
               ))}
             </ul>
           )}
-          <pre className="draft">{draft.reply_draft}</pre>
+          <pre className="draft" dir="auto">
+            {draft.reply_draft}
+          </pre>
         </>
       ) : (
         <p className="muted">No draft yet.</p>

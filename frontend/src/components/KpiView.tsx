@@ -9,7 +9,8 @@ function Refs({ refs }: { refs: RecordRef[] }) {
     <ul className="refs">
       {refs.map((r) => (
         <li key={r.record_id}>
-          <code>{r.record_id}</code> {r.name ?? r.person_id} <span className="muted small">{r.detail}</span>
+          <code>{r.record_id}</code> <span dir="auto">{r.name ?? r.person_id}</span>{' '}
+          <span className="muted small">{r.detail}</span>
         </li>
       ))}
     </ul>

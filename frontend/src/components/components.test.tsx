@@ -180,3 +180,58 @@ describe('GeoView', () => {
     expect(html).toContain('BC-3a')
   })
 })
+
+
+describe('right-to-left text', () => {
+  const hebrew: LeadDetail = {
+    ...detail,
+    name: 'נועה כהן',
+    messages: [
+      {
+        ...detail.messages[0],
+        subject: 'הצעת מחיר',
+        body: 'היי, אנחנו חברת שילוח עם 80 עובדים.',
+        analysis: {
+          inbound_id: 'UI-IN-005',
+          mode: 'llm',
+          failure: null,
+          injection_signals: [],
+          extraction: {
+            language: 'he', intent: 'demo', interest_level: 'meeting_request', buyer_role: 'מנהלת תפעול',
+            data_problem: 'manual data entry', problem_category: 'document_extraction', volume_stated: false,
+            company_facts: { company_name: null, employees: 80, country: 'Israel', vertical: 'logistics', is_software_vendor: false },
+            timing: 'this_week', instruction_attempt: false,
+            evidence: [{ field: 'interest', quote: 'אשמח לשיחה של 20 דקות', translation: 'Happy to have a 20-minute call' }],
+          },
+        },
+      },
+    ],
+    assessment: { ...detail.assessment, status: 'QL candidate', review_flags: [] },
+    draft_available: true,
+    draft: {
+      person_id: 'P-1',
+      reply_draft: 'היי נועה,\nנשמח לשיחה של 20 דקות.',
+      draft_mode: 'llm',
+      draft_requires_human_approval: true,
+      draft_flags: [],
+    },
+  }
+  const html = renderToStaticMarkup(<LeadDetailView detail={hebrew} onChange={() => undefined} />)
+
+  it('lets the browser pick the direction of the draft and the message body', () => {
+    expect(html).toMatch(/<pre class="draft" dir="auto">היי נועה,/)
+    expect(html).toMatch(/<blockquote dir="auto">היי, אנחנו חברת שילוח/)
+  })
+
+  it('does the same for the subject, evidence, translation and name', () => {
+    expect(html).toContain('<p class="subject" dir="auto">הצעת מחיר</p>')
+    expect(html).toContain('<q dir="auto">אשמח לשיחה של 20 דקות</q>')
+    expect(html).toContain('<span dir="auto">Happy to have a 20-minute call</span>')
+    expect(html).toContain('<h1 dir="auto">נועה כהן</h1>')
+  })
+
+  it('marks lead names in the queue', () => {
+    const queue = renderToStaticMarkup(<LeadQueue rows={[{ ...row, name: 'נועה כהן' }]} />)
+    expect(queue).toContain('dir="auto">נועה כהן</a>')
+  })
+})

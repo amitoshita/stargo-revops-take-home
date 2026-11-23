@@ -104,7 +104,11 @@ export function GeoView({ report, brief, onBrief }: { report: GeoReport; brief: 
                 {brief.flags.map((f, i) => (
                   <li key={i} className={`flag-${f.severity}`}>
                     <strong>{f.severity}</strong> {f.location}: {f.rule}
-                    {f.text && <div className="small muted">“{f.text}”</div>}
+                    {f.text && (
+                      <div className="small muted" dir="auto">
+                        “{f.text}”
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
