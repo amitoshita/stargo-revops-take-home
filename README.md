@@ -129,8 +129,6 @@ tables that scroll inside their card.
 - Unknown vendors outside `known_competitors` are not detected in AI answers.
 - A person outside the CRM keeps their id when a later message adds an email or LinkedIn
   URL. If two people who already exist are later merged by a shared key, one id goes away;
-  their decisions survive because they are keyed by email.
-- Decisions are keyed by email, so a LinkedIn-only sender cannot be accepted until an email
-  is known. The API says so.
+  their decisions survive because they re-attach by email or LinkedIn.
 - A blank `GROQ_API_KEY=` in the shell environment does not override a key in `.env`.
   Remove the key from `.env` to run without it.

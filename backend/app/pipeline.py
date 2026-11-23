@@ -60,13 +60,16 @@ def build_world(
 ) -> World:
     crm_list, inbound_list, decision_list = list(crm), list(inbound), list(decisions)
     identity = build_identity(
-        crm_list, inbound_list, [d.contact_email for d in decision_list] + list(event_emails)
+        crm_list,
+        inbound_list,
+        list(event_emails),
+        extra_contacts=[d.identity_keys for d in decision_list],
     )
     companies = build_company_index(crm_list)
 
     by_person: dict[str, list[SalesDecision]] = {}
     for decision in decision_list:
-        person = identity.person_for_email(decision.contact_email)
+        person = identity.person_for_contact(*decision.identity_keys)
         if person is not None:
             by_person.setdefault(person.person_id, []).append(decision)
     by_person = {pid: sort_decisions(ds) for pid, ds in by_person.items()}

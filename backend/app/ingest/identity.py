@@ -70,6 +70,12 @@ class IdentityIndex:
         pid = self._person_by_key.get(email_key(email))
         return self.persons[pid] if pid else None
 
+    def person_for_contact(self, email: str | None, linkedin: str | None) -> Person | None:
+        for key in _keys(email, linkedin):
+            if key in self._person_by_key:
+                return self.persons[self._person_by_key[key]]
+        return None
+
     def person_for_inbound(self, inbound: InboundMessage) -> Person:
         for key in _keys(inbound.email, inbound.linkedin):
             if key in self._person_by_key:
@@ -81,7 +87,10 @@ def build_identity(
     crm: Iterable[CrmContact],
     inbound: Iterable[InboundMessage],
     extra_emails: Iterable[str] = (),
+    extra_contacts: Iterable[tuple[str | None, str | None]] = (),
 ) -> IdentityIndex:
+    """`extra_emails` / `extra_contacts`: keys from decisions and events, so people with no
+    inbound (e.g. a CRM contact with an old acceptance) still resolve."""
     crm_list = sorted(crm, key=lambda c: c.record_id)
     inbound_list = sorted(inbound, key=lambda m: (m.received_at, m.id))
     uf = _UnionFind()
@@ -90,6 +99,7 @@ def build_identity(
         *(_keys(c.email, c.linkedin) for c in crm_list),
         *(_keys(m.email, m.linkedin) for m in inbound_list),
         *([email_key(e)] for e in extra_emails),
+        *(_keys(email, linkedin) for email, linkedin in extra_contacts),
     ):
         for key in group:
             uf.add(key)

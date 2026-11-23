@@ -182,12 +182,17 @@ def parse_decision(raw: Mapping[str, Any], origin: Origin) -> SalesDecision | In
     errors: list[str] = []
     ref = _ref(raw, "id")
     email: str | None = None
+    linkedin: str | None = None
     try:
         email = normalize_email(_text(raw, "contact_email"))
     except ValueError:
         errors.append("invalid contact email")
-    if email is None and not errors:
-        errors.append("contact email is required")
+    try:
+        linkedin = normalize_linkedin(_text(raw, "contact_linkedin"))
+    except ValueError:
+        errors.append("invalid contact LinkedIn URL")
+    if email is None and linkedin is None and not errors:
+        errors.append("a contact email or LinkedIn URL is required")
     decision = _text(raw, "decision")
     if decision not in ("accepted", "rejected"):
         errors.append("decision must be 'accepted' or 'rejected'")
@@ -195,12 +200,14 @@ def parse_decision(raw: Mapping[str, Any], origin: Origin) -> SalesDecision | In
     if decided_by is None:
         errors.append("decided_by is required")
     decided_at = _timestamp(raw.get("decided_at"), errors, "decided_at")
-    if errors or email is None or decided_by is None or decided_at is None:
+    if errors or (email is None and linkedin is None) or decided_by is None or decided_at is None:
         return IngestError(record_ref=ref, kind="decision", reasons=errors)
     return SalesDecision(
         id=ref,
         origin=origin,
         contact_email=email,
+        contact_linkedin=linkedin,
+        person_id=_text(raw, "person_id"),
         decision="accepted" if decision == "accepted" else "rejected",
         decided_by=decided_by,
         decided_at=decided_at,

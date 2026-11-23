@@ -186,9 +186,11 @@ class Service:
     ) -> SalesDecision:
         snap = self.snapshot()
         person = self.require_lead(snap, person_id)
+        # Recorded with the person's identity keys, so it re-attaches by email or LinkedIn.
         email = (person.crm.email if person.crm else None) or min(person.emails, default=None)
-        if email is None:
-            raise ServiceError(422, ["this person has no email address; a decision needs one"])
+        linkedin = (person.crm.linkedin if person.crm else None) or min(
+            person.linkedins, default=None
+        )
         if decided_at:
             try:
                 parse_aware(decided_at)
@@ -200,6 +202,8 @@ class Service:
             {
                 "id": self.repo.next_ui_id("UI-SD-", "decisions"),
                 "contact_email": email,
+                "contact_linkedin": linkedin,
+                "person_id": person_id,
                 "decision": decision,
                 "decided_by": decided_by,
                 "decided_at": decided_at or now_il().isoformat(),

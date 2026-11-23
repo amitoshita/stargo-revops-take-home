@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from app.core.enums import Channel, Region, Source
 
@@ -61,13 +61,27 @@ class CrmContact(_Frozen):
 
 
 class SalesDecision(_Frozen):
+    """Matched to a person by normalized email or LinkedIn (either may be blank, not both)."""
+
     id: str
     origin: Origin
-    contact_email: str  # normalized
+    contact_email: str | None  # normalized; seed decisions always carry one
     decision: Literal["accepted", "rejected"]
     decided_by: str
     decided_at: AwareDatetime
     note: str | None
+    contact_linkedin: str | None = None  # normalized: linkedin.com/in/<slug>
+    person_id: str | None = None  # the person it was recorded for (UI decisions; reference only)
+
+    @model_validator(mode="after")
+    def _has_contact(self) -> SalesDecision:
+        if not self.contact_email and not self.contact_linkedin:
+            raise ValueError("a decision needs a contact email or LinkedIn URL")
+        return self
+
+    @property
+    def identity_keys(self) -> tuple[str | None, str | None]:
+        return self.contact_email, self.contact_linkedin
 
 
 PipelineEventType = Literal["meeting_booked", "meeting_held", "opportunity_created"]

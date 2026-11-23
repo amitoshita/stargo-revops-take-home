@@ -45,6 +45,7 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 - **D2 — Pipeline events** count by their own date for any person who is not an existing customer or a pre-existing open deal (they need not be a QL). Meetings booked = 4.
 - **D7 — Reporting window** is the half-open interval [Sun 00:00, Fri 00:00) Asia/Jerusalem.
 - **D8 — Several decisions for one person.** The latest decision wins; full history is visible.
+- **Decisions belong to a person.** A decision is matched to a person by normalized email or LinkedIn URL (either may be blank, as for inbound). Seed decisions carry their contact email; a UI decision stores the person's email and LinkedIn (whichever exist) and the person id. A LinkedIn-only sender can therefore be accepted and counts as a QL once per person.
 
 ## LLM and fallback
 

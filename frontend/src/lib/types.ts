@@ -112,7 +112,9 @@ export interface Assessment {
 export interface Decision {
   id: string
   origin: string
-  contact_email: string
+  contact_email: string | null
+  contact_linkedin: string | null
+  person_id: string | null
   decision: 'accepted' | 'rejected'
   decided_by: string
   decided_at: string

@@ -8,8 +8,9 @@ from tests.helpers import seed
 
 def _index() -> tuple[SeedBundle, IdentityIndex]:
     bundle = seed()
-    extra = [d.contact_email for d in bundle.decisions] + [e.contact_email for e in bundle.events]
-    return bundle, build_identity(bundle.crm, bundle.inbound, extra)
+    events = [e.contact_email for e in bundle.events]
+    decisions = [d.identity_keys for d in bundle.decisions]
+    return bundle, build_identity(bundle.crm, bundle.inbound, events, extra_contacts=decisions)
 
 
 def test_loader_counts_and_rejects_in019() -> None:

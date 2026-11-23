@@ -206,3 +206,51 @@ def test_api_logs_are_pii_free(api: TestClient, caplog: pytest.LogCaptureFixture
         api.post("/api/inbound", json={"from_email": "bad@", "body": "secret pricing text"})
     for needle in ("claire@transmanche-fret.fr", "Claire", "freight forwarder in France", "secret"):
         assert needle not in caplog.text
+
+
+# ---- LinkedIn-only senders can be accepted (brief: email OR LinkedIn may be blank) ----------
+
+LINKEDIN_ONLY = {
+    "from_name": "Sara Lindqvist",
+    "linkedin_url": "https://www.linkedin.com/in/Sara-Lindqvist-Ops/",
+    "channel": "linkedin_dm",
+    "body": "I am Head of Operations at a 200-person freight forwarder in Sweden. Our team re-keys "
+    "about 900 bills of lading a month from PDFs. Can you show us a demo?",
+}
+
+
+def test_linkedin_only_sender_can_be_accepted_and_counts_once(tmp_path: Path) -> None:
+    with TestClient(create_app(make_service(tmp_path))) as api:
+        result = api.post("/api/inbound", json=LINKEDIN_ONLY).json()
+        pid = result["person_id"]
+        assert result["lead"]["status"] == "QL candidate"  # C1-C4 pass, no email at all
+        body = {"decision": "accepted", "decided_by": "Dana", "decided_at": IN_WEEK}
+        decision = api.post(f"/api/leads/{pid}/decisions", json=body)
+        assert decision.status_code == 201
+        stored = decision.json()
+        assert stored["contact_email"] is None
+        assert stored["contact_linkedin"] == "linkedin.com/in/sara-lindqvist-ops"
+        assert stored["person_id"] == pid
+        assert leads_by_name(api)["Sara Lindqvist"]["status"] == "QL"
+        assert len(qls(api)) == 6
+        # a second acceptance for the same person still counts once (latest decision wins)
+        api.post(f"/api/leads/{pid}/decisions", json={**body, "decided_by": "Leo"})
+        assert len(qls(api)) == 6
+    with TestClient(create_app(make_service(tmp_path))) as api:  # restart
+        assert leads_by_name(api)["Sara Lindqvist"]["status"] == "QL"
+        assert len(qls(api)) == 6
+
+
+def test_linkedin_only_acceptance_survives_a_later_email(tmp_path: Path) -> None:
+    """The decision re-attaches by LinkedIn even after the person's email becomes known."""
+    with TestClient(create_app(make_service(tmp_path))) as api:
+        pid = api.post("/api/inbound", json=LINKEDIN_ONLY).json()["person_id"]
+        body = {"decision": "accepted", "decided_by": "Dana", "decided_at": IN_WEEK}
+        api.post(f"/api/leads/{pid}/decisions", json=body)
+        follow_up = {
+            **LINKEDIN_ONLY,
+            "from_email": "sara@nordfrakt.se",
+            "body": "Thanks, we look forward to the demo with our team.",
+        }
+        assert api.post("/api/inbound", json=follow_up).json()["person_id"] == pid
+        assert len(qls(api)) == 6
