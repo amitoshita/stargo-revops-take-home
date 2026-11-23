@@ -27,14 +27,27 @@ HYPE = re.compile(
     re.IGNORECASE,
 )
 CUSTOMERS = re.compile(
-    r"\b(customers?|clients?) (such as|like|including)\b|\b(used|trusted|chosen) by\b",
+    r"\b(customers?|clients?|users?) (such as|like|including|include)\b"
+    r"|\b(used|trusted|chosen|loved|adopted|deployed) (by|at)\b"
+    r"|\b(in use|live|in production) at\b|\bcase stud(y|ies) (with|from)\b",
+    re.IGNORECASE,
+)
+# "Acme uses Stargo", "Maersk chose Stargo": a capitalised name doing something with Stargo.
+NAMED_USER = re.compile(
+    r"\b[A-Z][\w&.-]+ (uses|use|chose|choose|relies on|switched to|runs) Stargo\b"
+)
+# BC-5 self-descriptions the engine-answer check would miss (no "Stargo is a ..." copula).
+SELF_CATEGORY = re.compile(
+    r"\b(we are|we're|our (company|platform|product|team) is|stargo,)\s+(a|an|the)\b[^.]{0,40}?"
+    r"\b(carrier|shipping line|forwarder|broker(age)?|travel|holiday|airline)\b",
     re.IGNORECASE,
 )
 STOP = frozenset(
     {
         "the", "and", "for", "with", "from", "that", "this", "into", "your", "their", "them",
         "they", "what", "when", "which", "while", "about", "after", "before", "more", "most",
-        "than", "then", "also", "each", "such", "have", "will", "can", "stargo",
+        "than", "then", "also", "each", "such", "have", "will", "can", "stargo", "under",
+        "over", "reached", "reach", "cut", "cuts", "pilot", "pilots", "team", "teams",
     }
 )  # fmt: skip
 
@@ -63,21 +76,58 @@ def _check_claim(
     if unknown:
         flag(f"unknown or non-citable reference: {', '.join(unknown)}")
     cited = " ".join(claims.get(r, "") for r in claim.refs)
-    stray = sorted(figures_in(claim.text) - figures_in(cited))
-    if stray:
-        flag(f"figure not in the cited claims (BC-5): {', '.join(stray)}")
+    words = _content_words(claim.text)
+    for figure in sorted(figures_in(claim.text)):
+        # The figure must come from a cited source that is about this claim, so one PP cannot
+        # lend its number to an unrelated statement.
+        support = [
+            r for r in claim.refs
+            if figure in figures_in(claims.get(r, ""))
+            and len(words & _content_words(claims.get(r, ""))) >= 2
+        ]  # fmt: skip
+        if not support:
+            flag(f"figure not in the cited claims (BC-5): {figure}")
     if not competitor_allowed:
         named = [c for c in competitors if re.search(rf"\b{re.escape(c)}\b", claim.text, re.I)]
         if named:
             flag(f"competitor named in an answer (BC-5): {', '.join(named)}")
-    if CUSTOMERS.search(claim.text):
+    if CUSTOMERS.search(claim.text) or NAMED_USER.search(claim.text):
         flag("customer names or 'used by' list (BC-5: none approved)")
     for wrong in wrong_claims(claim.text, "Stargo"):
         flag(f"BC-5: Stargo is {wrong.rule}")
+    if SELF_CATEGORY.search(claim.text):
+        flag("BC-5: Stargo is not a carrier, broker, forwarder or travel company")
     if HYPE.search(claim.text):
         flag("hype word (BC-6)", "warn")
     if claim.refs and not unknown and not (_content_words(claim.text) & _content_words(cited)):
         flag("claim shares no content words with its cited sources: check support", "warn")
+
+
+def _check_headline(
+    text: str,
+    location: str,
+    competitors: list[str],
+    flags: list[ValidatorFlag],
+    *,
+    competitor_allowed: bool,
+) -> None:
+    """Titles, headings and FAQ questions carry no refs, so they may make no claims at all."""
+
+    def flag(rule: str, severity: Literal["block", "warn"] = "block") -> None:
+        flags.append(ValidatorFlag(location=location, rule=rule, severity=severity, text=text))
+
+    if figures_in(text):
+        flag("figure in a title, heading or question (no source can back it there)")
+    if CUSTOMERS.search(text) or NAMED_USER.search(text):
+        flag("customer names or 'used by' list (BC-5: none approved)")
+    if wrong_claims(text, "Stargo") or SELF_CATEGORY.search(text):
+        flag("BC-5: Stargo is not a carrier, broker, forwarder or travel company")
+    if not competitor_allowed:
+        named = [c for c in competitors if re.search(rf"\b{re.escape(c)}\b", text, re.I)]
+        if named:
+            flag(f"competitor named in a heading (BC-5): {', '.join(named)}")
+    if HYPE.search(text) or re.search(r"#\s*1\b|\bthe best\b|\bleading\b", text, re.I):
+        flag("hype or superlative (BC-6)", "warn")
 
 
 def validate_brief(
@@ -99,16 +149,18 @@ def validate_brief(
     if not draft.schema_org_type.strip():
         structural("schema_org_type", "BC-7: a schema.org type is required", "")
 
+    _check_headline(draft.title, "title", competitors, flags, competitor_allowed=True)
     _check_claim(draft.direct_answer, "direct_answer", claims, competitors, flags)
     for i, section in enumerate(draft.sections):
-        named = [c for c in competitors if re.search(rf"\b{re.escape(c)}\b", section.heading, re.I)]
-        if named:
-            structural(f"sections[{i}].heading",
-                       f"competitor named in a heading (BC-5): {', '.join(named)}",
-                       section.heading)  # fmt: skip
+        _check_headline(
+            section.heading, f"sections[{i}].heading", competitors, flags, competitor_allowed=False
+        )
         for j, paragraph in enumerate(section.paragraphs):
             _check_claim(paragraph, f"sections[{i}].paragraphs[{j}]", claims, competitors, flags)
     for i, item in enumerate(draft.faq):
+        _check_headline(
+            item.question, f"faq[{i}].question", competitors, flags, competitor_allowed=True
+        )
         for j, answer in enumerate(item.answer):
             _check_claim(answer, f"faq[{i}].answer[{j}]", claims, competitors, flags)
     return flags

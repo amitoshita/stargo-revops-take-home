@@ -52,7 +52,7 @@ cd frontend && npx tsc -b && npx eslint . && npx vitest run
 ```
 
 The tests are fully offline. Outbound sockets are blocked in `conftest.py`, and LLM calls
-use a fake. There are about 380 backend tests and 18 frontend tests.
+use a fake. There are about 400 backend tests and 18 frontend tests.
 
 ## How it works
 
@@ -127,5 +127,10 @@ tables that scroll inside their card.
 - The claim validator checks tags, figures and the BC-5 rules, not meaning. A paraphrase
   that goes slightly beyond its source can pass, so a human reviews before publishing.
 - Unknown vendors outside `known_competitors` are not detected in AI answers.
+- A person outside the CRM keeps their id when a later message adds an email or LinkedIn
+  URL. If two people who already exist are later merged by a shared key, one id goes away;
+  their decisions survive because they are keyed by email.
+- Decisions are keyed by email, so a LinkedIn-only sender cannot be accepted until an email
+  is known. The API says so.
 - A blank `GROQ_API_KEY=` in the shell environment does not override a key in `.env`.
   Remove the key from `.env` to run without it.

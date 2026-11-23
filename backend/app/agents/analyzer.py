@@ -42,7 +42,7 @@ def analyze_message(
     client: LLMClient | None,
     fixtures: FixtureStore | None,
 ) -> MessageAnalysis:
-    signals = detect_instruction_attempt(message.subject, message.body)
+    signals = detect_instruction_attempt(message.from_name, message.subject, message.body)
     if signals:
         log.info("agent_a ref=%s injection_signals=%s", message.id, ",".join(signals))
         mode = AnalysisMode.LLM if client else AnalysisMode.RULES_ONLY

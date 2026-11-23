@@ -1,7 +1,7 @@
 # Weekly KPI pack
 
 **Week:** Sun 4 Oct – Thu 8 Oct 2026 (Asia/Jerusalem)  
-**Generated:** 2026-11-23 10:05 IL  
+**Generated:** 2026-11-23 10:16 IL  
 **Analysis mode:** recorded fixture
 
 ## Acquisition vs target

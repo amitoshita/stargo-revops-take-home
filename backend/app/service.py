@@ -9,11 +9,14 @@ The LLM is called only for Agent A on a new message and for a draft a human asks
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict
 
 from app.agents.agent_b import build_agent_b, wants_draft
 from app.agents.analyzer import analyze_message
@@ -55,6 +58,13 @@ KPI = "kpi_pack"
 GEO = "geo_report"
 BRIEF = "geo_brief"
 MODE_LABEL = {True: "llm", False: "rules-only fallback mode"}
+
+
+class StoredDraft(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    key: str
+    output: AgentBOutput
 
 
 class ServiceError(Exception):
@@ -212,19 +222,40 @@ class Service:
         latest = self.latest_extraction(snap, person_id)
         if not wants_draft(assessment, latest):
             raise ServiceError(409, [f"no draft for status '{assessment.status.value}'"])
-        first = (person.crm.first_name if person.crm else None) or _first_name(person)
+        first = plain_first_name(person.crm.first_name if person.crm else None) or _first_name(
+            person
+        )
         output = build_agent_b(person_id, assessment, latest, first_name=first, client=self.client)
-        self.repo.put_doc(DRAFT, person_id, output)
+        self.repo.put_doc(
+            DRAFT, person_id, StoredDraft(key=self.draft_key(snap, person_id), output=output)
+        )
         return output
 
+    def draft_key(self, snap: Snapshot, person_id: str) -> str:
+        """What a draft depends on. If any of it changes, the stored draft is stale."""
+        assessment = snap.assessments[person_id]
+        latest = self.latest_extraction(snap, person_id)
+        return "|".join(
+            [
+                snap.world.leads[person_id].inbound[-1].id,
+                assessment.status.value,
+                assessment.owner or "",
+                latest.problem_category.value if latest else "",
+                latest.interest_level if latest else "",
+                latest.intent.value if latest else "",
+            ]
+        )
+
     def stored_draft(self, snap: Snapshot, person_id: str) -> AgentBOutput | None:
-        stored = self.repo.get_doc(DRAFT, person_id, AgentBOutput)
+        stored = self.repo.get_doc(DRAFT, person_id, StoredDraft)
         if stored is None:
             return None
         current = snap.assessments.get(person_id)
         if current is None or not wants_draft(current, self.latest_extraction(snap, person_id)):
             return None  # status changed since the draft (e.g. now suppressed): never show it
-        return stored
+        if stored.key != self.draft_key(snap, person_id):
+            return None  # new message, owner or status since the draft: ask for a new one
+        return stored.output
 
     @staticmethod
     def latest_extraction(snap: Snapshot, person_id: str) -> AgentAOutput | None:
@@ -394,11 +425,27 @@ class Service:
 
 def ran_modes(analyses: Iterable[MessageAnalysis]) -> list[AnalysisMode]:
     """Modes of analyses that actually ran (an injection stop runs no analysis)."""
-    return sorted({a.mode for a in analyses if a.extraction is not None or a.failure is not None})
+    return sorted(
+        {
+            a.mode
+            for a in analyses
+            if a.extraction is not None
+            or (a.failure is not None and a.failure.kind != "not_analysed")
+        }
+    )
+
+
+_PLAIN_NAME = re.compile(r"^[^\W\d_](?:[^\W\d_]|['-]){0,29}$")
+
+
+def plain_first_name(value: str | None) -> str | None:
+    """A first name for a greeting: one short word of letters, else nothing (sender input)."""
+    token = (value or "").split()[0] if (value or "").split() else ""
+    return token if _PLAIN_NAME.match(token) else None
 
 
 def _first_name(person: Person) -> str | None:
     for message in person.inbound:
-        if message.from_name:
-            return message.from_name.split()[0]
+        if name := plain_first_name(message.from_name):
+            return name
     return None

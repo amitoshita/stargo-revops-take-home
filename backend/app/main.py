@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.routes import router
@@ -32,6 +33,15 @@ def create_app(service: Service | None = None) -> FastAPI:
     @app.exception_handler(ServiceError)
     async def service_error(_: Request, exc: ServiceError) -> JSONResponse:
         return JSONResponse(status_code=exc.status, content={"detail": exc.reasons})
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(_: Request, exc: RequestValidationError) -> JSONResponse:
+        # Field and reason only: FastAPI's default would echo the submitted values back.
+        reasons = [
+            f"{'.'.join(str(p) for p in err['loc'][1:]) or 'body'}: {err['msg']}"
+            for err in exc.errors()
+        ]
+        return JSONResponse(status_code=422, content={"detail": reasons})
 
     @app.exception_handler(Exception)
     async def unexpected(_: Request, exc: Exception) -> JSONResponse:

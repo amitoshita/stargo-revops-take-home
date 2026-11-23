@@ -102,13 +102,22 @@ def build_identity(
         if keys:
             crm_by_root.setdefault(uf.find(keys[0]), []).append(contact)
 
+    # A person outside the CRM is named after the key of their earliest inbound message, so
+    # the id does not change when a later message adds an email or LinkedIn URL.
+    first_key: dict[str, str] = {}
+    for message in inbound_list:
+        keys = _keys(message.email, message.linkedin)
+        first_key.setdefault(uf.find(keys[0]), keys[0])
+
     persons: dict[str, Person] = {}
     person_by_root: dict[str, str] = {}
     for key in sorted(uf.parent):
         root = uf.find(key)
         if root not in person_by_root:
             contacts = crm_by_root.get(root, [])
-            pid = contacts[0].record_id if contacts else f"P-{short_hash(root)}"
+            pid = (
+                contacts[0].record_id if contacts else f"P-{short_hash(first_key.get(root, root))}"
+            )
             person_by_root[root] = pid
             persons[pid] = Person(
                 person_id=pid,

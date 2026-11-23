@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from app.agents.schemas import MessageAnalysis
+from app.agents.schemas import AnalysisFailure, MessageAnalysis
+from app.core.enums import AnalysisMode
 from app.ingest.identity import IdentityIndex, Person, build_company_index, build_identity
 from app.ingest.normalize import email_domain, is_free_email_domain
 from app.ingest.schemas import CompanyRecord, CrmContact, InboundMessage, SalesDecision
@@ -38,6 +39,16 @@ def _company_for(person: Person, companies: Mapping[str, CompanyRecord]) -> Comp
 def _free_email(person: Person) -> bool:
     domains = [email_domain(e) for e in person.emails]
     return bool(domains) and all(is_free_email_domain(d) for d in domains)
+
+
+def _not_analysed(inbound_id: str) -> MessageAnalysis:
+    """A stored message without an analysis must never be judged on the others: needs review."""
+    return MessageAnalysis(
+        inbound_id=inbound_id,
+        mode=AnalysisMode.RULES_ONLY,
+        extraction=None,
+        failure=AnalysisFailure(kind="not_analysed", detail="no analysis stored for this message"),
+    )
 
 
 def build_world(
@@ -70,7 +81,7 @@ def build_world(
             company=_company_for(person, companies),
             free_email=_free_email(person),
             inbound=list(person.inbound),
-            analyses=[analyses[m.id] for m in person.inbound if m.id in analyses],
+            analyses=[analyses.get(m.id) or _not_analysed(m.id) for m in person.inbound],
             decisions=by_person.get(pid, []),
         )
     return World(identity, companies, by_person, leads)

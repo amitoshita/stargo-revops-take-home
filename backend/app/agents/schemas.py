@@ -65,6 +65,7 @@ FailureKind = Literal[
     "schema_invalid",
     "quote_mismatch",
     "fallback_unsupported",
+    "not_analysed",
 ]
 
 

@@ -33,9 +33,25 @@ def load_claims(path: Path) -> dict[str, str]:
     return {k: v for k, v in claims.items() if CITABLE.match(k)}
 
 
+_NUMBER_WORDS = {
+    "one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six": "6", "seven": "7",
+    "eight": "8", "nine": "9", "ten": "10", "eleven": "11", "twelve": "12", "fifteen": "15",
+    "twenty": "20", "thirty": "30", "forty": "40", "fifty": "50", "hundred": "100",
+    "thousand": "1000", "dozen": "12", "half": "50%", "double": "2x", "twice": "2x",
+    "triple": "3x", "thrice": "3x", "halve": "50%", "halves": "50%", "halved": "50%",
+    "doubles": "2x", "doubled": "2x", "triples": "3x", "tripled": "3x",
+}  # fmt: skip
+
+
 def figures_in(text: str) -> set[str]:
-    """Numbers as they appear in a text (e.g. '97', '3', '15'), for figure checks."""
-    words = {"one": "1", "two": "2", "three": "3", "four": "4", "five": "5"}
-    found = set(re.findall(r"\d+(?:\.\d+)?", text))
-    found |= {words[w] for w in re.findall(r"\b(one|two|three|four|five)\b", text.lower())}
+    """Quantities in a text, normalised ('three' → '3', 'half' → '50%', 'double' → '2x')."""
+    lowered = text.lower()
+    found = set(re.findall(r"\d+(?:\.\d+)?", lowered))
+    for word, value in _NUMBER_WORDS.items():
+        if re.search(rf"\b{word}\b", lowered):
+            found.add(value)
+    if re.search(r"\bpercent\b|%", lowered):
+        found.add("%")
+    if re.search(r"\b\d+\s*x\b|\btimes (faster|more|less|fewer)\b", lowered):
+        found.add("x")
     return found

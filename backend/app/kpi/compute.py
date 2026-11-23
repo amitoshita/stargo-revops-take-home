@@ -131,6 +131,15 @@ def compute_pack(
             excluded.append(ExcludedRecord(record_id=latest.id, name=name, reason="rejected"))
             continue
         if person.crm and person.crm.is_customer:
+            if assessment and assessment.status in (Status.SUPPRESSED, Status.NEEDS_REVIEW):
+                excluded.append(
+                    ExcludedRecord(
+                        record_id=latest.id,
+                        name=name,
+                        reason=f"customer, but status is {assessment.status.value}",
+                    )
+                )
+                continue
             expansion["accepted"].append(_decision_ref(latest, person))
             continue
         if assessment is None:
@@ -199,16 +208,15 @@ def compute_pack(
     for source in Source:
         refs = by_source.get(source, [])
         status = feed_status.get(source)
-        if status == "not_received":
+        if status != "received":  # not received, or not reported at all: unknown, never 0
             rows.append(
                 SourceRow(
                     source=source,
                     count=len(refs) or None,
                     feed_status=status,
                     records=refs,
-                    note="feed not received: unknown"
-                    if not refs
-                    else f"feed not received: at least {len(refs)}",
+                    note=f"feed {'not received' if status else 'status not reported'}: "
+                    + ("unknown" if not refs else f"at least {len(refs)}"),
                 )
             )
         else:
@@ -259,6 +267,10 @@ def compute_pack(
         "understated."
         for s, st in sorted(feed_status.items())
         if st == "not_received"
+    ] + [
+        f"Feed '{s.value}' status was not reported: its numbers are unknown."
+        for s in Source
+        if s not in feed_status
     ]
     needs_review = sum(1 for a in assessments.values() if a.status == Status.NEEDS_REVIEW)
     if needs_review:
