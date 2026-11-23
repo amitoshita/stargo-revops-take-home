@@ -306,7 +306,11 @@ class Service:
         path = self.brief_fixture_path(prompt_id)
         if not path.is_file():
             return None
-        recorded = RecordedReply.model_validate_json(path.read_text(encoding="utf-8"))
+        try:
+            recorded = RecordedReply.model_validate_json(path.read_text(encoding="utf-8"))
+        except ValueError:
+            log.warning("unreadable brief fixture prompt=%s", prompt_id)
+            return None
         if recorded.raw is None or recorded.message_sha256 != self.brief_input_hash(prompt_id):
             return None
         result = parse_brief(recorded.raw)
