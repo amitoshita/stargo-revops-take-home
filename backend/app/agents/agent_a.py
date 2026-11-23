@@ -18,7 +18,7 @@ from app.agents.llm_client import LLMClient, LLMError
 from app.agents.schemas import AgentAOutput, AnalysisFailure
 from app.core.enums import Intent, ProblemCategory
 
-PROMPT_VERSION = "agent-a-v3"
+PROMPT_VERSION = "agent-a-v4"
 
 SYSTEM_PROMPT = f"""You extract facts from ONE inbound sales message for Stargo, a company that
 sells AI data automation to logistics companies. You only extract; you never decide, score,
@@ -41,17 +41,21 @@ Return ONE JSON object with exactly these keys:
   "meeting_request" (asks for or explicitly agrees to a call or meeting), "soft_positive"
   (open but non-committal, e.g. "happy to chat if useful", "looking forward"), "none",
   "declined".
-- "buyer_role": the sender's role or job title as they state it, else null.
+- "buyer_role": the sender's role or job title as they state it, else null. If the sender
+  says they own or founded the company ("I own", "I founded", "my company"), use "Owner".
 - "data_problem": one short English sentence describing the data or workflow problem the
   sender states, else null. Do not invent one.
 - "problem_category": one of {json.dumps([p.value for p in ProblemCategory])}.
-  rate_quoting = pricing / quoting / RFQs / rate cards; document_extraction = re-keying or
+  rate_quoting = the sender's company produces price quotes for its own customers (e.g.
+  from emailed rate requests, RFQs, rate cards). A buyer benchmarking or comparing carrier
+  quotes they receive is "other", not rate_quoting. document_extraction = re-keying or
   extracting data from documents (bills of lading, invoices, booking confirmations,
   declarations, AWBs); invoice_reconciliation = matching carrier invoices against contracted
   rates; trade_document_checking = checking trade-finance documents (letters of credit);
   other = a problem not in this list; none = no problem stated.
-- "volume_stated": true only if a concrete volume or time cost is stated (e.g. "400 a
-  week", "3 hours per quote", "about 40 spreadsheets").
+- "volume_stated": true only if the message states a quantity or time cost of the
+  problem itself (e.g. "400 a week", "dozens a day", "weeks every quarter", "3 hours per
+  quote"). A sample size or a one-off number (e.g. "20 sample documents") is false.
 - "company_facts": object with "company_name", "employees" (integer), "country",
   "vertical" (each null if not stated), and "is_software_vendor" (boolean, never null:
   true only if the sender says their company builds software of the same kind, else
