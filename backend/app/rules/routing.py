@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.core.enums import Region, Status
+from app.core.enums import ICP_REGIONS, Region, Status
 from app.rules.context import LeadContext
 from app.rules.exclusions import Exclusion
 from app.rules.ql_gate import region_fact
@@ -36,7 +36,10 @@ def region_route(ctx: LeadContext) -> Route:
     if region is None:
         return Route(TRIAGE, "region unknown")
     owner = OWNER_BY_REGION[region.value]
-    return Route(owner, f"region {region.value.value} ({region.label()})")
+    basis = f"region {region.value.value} ({region.label()})"
+    if region.value not in ICP_REGIONS:
+        basis += ", outside ICP regions"
+    return Route(owner, basis)
 
 
 def account_route(ctx: LeadContext) -> Route | None:

@@ -21,6 +21,7 @@ SCORED_STATUSES = frozenset({Status.QL, Status.QL_CANDIDATE, Status.NURTURE})
 
 
 def _gate_status(checklist: QLChecklist, ctx: LeadContext) -> tuple[Status, str]:
+    """D12/D13: one map for accepted and not-yet-accepted leads; acceptance never overrides."""
     latest = ctx.latest_decision
     if latest is not None and latest.decision == "rejected":
         return Status.DISQUALIFIED, "gate:rejected_by_sales"
@@ -31,13 +32,18 @@ def _gate_status(checklist: QLChecklist, ctx: LeadContext) -> tuple[Status, str]
             if accepted
             else (Status.QL_CANDIDATE, "gate:awaiting_acceptance")
         )
+    prefix = "gate:accepted_but_" if accepted else "gate:"
+    hard = [
+        name
+        for name in checklist.failing
+        if name == "C2" or (name == "C1" and not checklist.c1_fails_only_on_region)
+    ]
+    if hard:  # C2 fails, or C1 fails on vertical or size
+        return Status.DISQUALIFIED, prefix + "fails_" + "_".join(hard)
+    if checklist.failing:  # C3/C4 fail, or C1 fails only on region (D17)
+        return Status.NURTURE, prefix + "fails_" + "_".join(checklist.failing)
     if accepted:
-        if checklist.failing:  # D12: acceptance does not override C1–C4
-            return Status.DISQUALIFIED, "gate:accepted_but_fails_" + "_".join(checklist.failing)
         return Status.QL_CANDIDATE, "gate:accepted_with_unknowns"  # D14
-    failing = set(checklist.failing)
-    if failing & {"C1", "C2"}:  # D13
-        return Status.DISQUALIFIED, "gate:fails_" + "_".join(sorted(failing & {"C1", "C2"}))
     return Status.NURTURE, "gate:incomplete"
 
 

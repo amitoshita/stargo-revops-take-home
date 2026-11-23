@@ -20,7 +20,7 @@ EXPECTED: dict[str, tuple[Status, str | None]] = {
     "HS-1009": (Status.QL, "Mei"),  # Rachel
     "HS-1011": (Status.EXCLUDED, "Sam"),  # Mark, customer → expansion
     "HS-1012": (Status.EXCLUDED, "Mei"),  # Daniel, pre-existing deal
-    "HS-1013": (Status.DISQUALIFIED, None),  # Tom, accepted but C3 fails (D1, D12)
+    "HS-1013": (Status.NURTURE, "Leo"),  # Tom, accepted but C3 fails (D1, D12)
     "HS-1016": (Status.QL, "Sam"),  # Priya (accepted 10-11)
     "HS-1017": (Status.QL, "Noa"),  # Noam
     "HS-1018": (Status.EXCLUDED, None),  # Kai, competitor
@@ -60,10 +60,12 @@ def test_researched_only_contacts_are_not_leads() -> None:
 
 def test_tom_keeps_decision_and_shows_failing_c3() -> None:
     tom = assess_all(seed_world())["HS-1013"]
+    assert (tom.status, tom.owner) == (Status.NURTURE, "Leo")
     assert tom.checklist is not None
     assert tom.checklist.failing == ["C3"]
     assert tom.accepted_by is not None and tom.accepted_by.decided_by == "Leo"
-    assert tom.score is None
+    assert tom.score is not None
+    assert "C3" in tom.rationale and "benchmarking" in tom.rationale
 
 
 def test_yossi_passes_with_unverified_facts() -> None:

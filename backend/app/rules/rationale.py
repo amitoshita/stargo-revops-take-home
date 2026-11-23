@@ -16,7 +16,7 @@ def build_rationale(status: Status, reason: str, checklist: QLChecklist | None) 
     if checklist is None:
         return _clip(f"{status.value}: {reason}", MAX_LEN)
     conds = checklist.first_four()
-    if status == Status.DISQUALIFIED and checklist.failing:
+    if status in (Status.DISQUALIFIED, Status.NURTURE) and checklist.failing:
         evidence_from = [conds[name] for name in checklist.failing]
     else:
         evidence_from = [c for c in (conds["C3"], conds["C4"]) if c.status == "pass"]
@@ -38,10 +38,10 @@ def build_rationale(status: Status, reason: str, checklist: QLChecklist | None) 
         )
         line = f"Disqualified: {details}"
     elif status == Status.NURTURE:
-        gaps = [*checklist.failing, *checklist.unknown]
-        line = f"Nurture: {', '.join(gaps)} not met" + (
-            f" ({conds['C4'].reason})" if "C4" in gaps else ""
-        )
+        parts = [f"{name} {conds[name].reason}" for name in checklist.failing]
+        if checklist.unknown:
+            parts.append(f"{', '.join(checklist.unknown)} unknown")
+        line = "Nurture: " + "; ".join(parts)
     else:
         line = f"{status.value}: {reason}"
     if evidence:

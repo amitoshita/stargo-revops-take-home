@@ -123,6 +123,7 @@ def company_fit(ctx: LeadContext) -> QLCondition:
     country = country_fact(ctx)
     parts: list[str] = []
     fails: list[str] = []
+    failed_on: list[str] = []
     unknowns: list[str] = []
 
     if vertical is None:
@@ -131,25 +132,33 @@ def company_fit(ctx: LeadContext) -> QLCondition:
         parts.append(f"vertical {vertical.value} ({vertical.label()})")
         if vertical.value not in ICP_VERTICALS:
             fails.append(f"vertical {vertical.value} is not an ICP vertical")
+            failed_on.append("vertical")
     if employees is None:
         unknowns.append("company size")
     else:
         parts.append(f"{employees.value} employees ({employees.label()})")
         if employees.value < MIN_EMPLOYEES:
             fails.append(f"{employees.value} employees is under {MIN_EMPLOYEES}")
+            failed_on.append("size")
     if region is None or country is None:
         unknowns.append("region")
     else:
         parts.append(f"country {display_country(country.value)} ({country.label()})")
         if region.value not in ICP_REGIONS:
             fails.append(f"country {display_country(country.value)} is outside ICP regions")
+            failed_on.append("region")
 
     facts = [f for f in (vertical, employees, region) if f is not None]
     verified = bool(facts) and all(f.verified for f in facts) and len(facts) == 3
     source: FactSource = "crm" if verified else ("message" if facts else "none")
     if fails:
         return QLCondition(
-            status="fail", reason="; ".join(fails), evidence=parts, source=source, verified=verified
+            status="fail",
+            reason="; ".join(fails),
+            evidence=parts,
+            source=source,
+            verified=verified,
+            failed_on=failed_on,
         )
     if unknowns:
         return QLCondition(

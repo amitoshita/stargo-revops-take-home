@@ -108,7 +108,7 @@ def test_golden_exclusions_are_explained() -> None:
     assert "outside the week" in reasons["SD-010"]  # Priya, decided 11 Oct
     assert "outside the week" in reasons["SD-011"]  # Felix, decided 24 Sep
     assert reasons["SD-006"] == "rejected"  # Wim
-    assert "disqualified" in reasons["SD-007"] and "C3" in reasons["SD-007"]  # Tom
+    assert "nurture" in reasons["SD-007"] and "C3" in reasons["SD-007"]  # Tom
     assert "outside the week" in reasons["PE-001"]
     assert "outside the week" in reasons["PE-012"]
     assert "queued" in reasons["IN-018"]  # Marcus, Friday inbound

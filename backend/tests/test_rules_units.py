@@ -226,12 +226,21 @@ def test_pre_existing_deal(
         ({}, [], Status.QL_CANDIDATE),
         ({}, [decision()], Status.QL),
         ({}, [decision("rejected")], Status.DISQUALIFIED),
-        ({"problem_category": "other"}, [decision()], Status.DISQUALIFIED),  # D12
+        ({"problem_category": "other"}, [decision()], Status.NURTURE),  # D12: C3 fails
+        ({"interest_level": "none", "intent": "other"}, [decision()], Status.NURTURE),  # C4
+        ({"buyer_role": "Analyst"}, [decision()], Status.DISQUALIFIED),  # D12: C2 fails
+        ({"company_facts": {"employees": 5, "country": "NL", "vertical": "forwarder"}},
+         [decision()], Status.DISQUALIFIED),  # D12: C1 fails on size
+        ({"company_facts": {"employees": 300, "country": "France", "vertical": "forwarder"}},
+         [decision()], Status.NURTURE),  # D17: C1 fails only on region
         ({"problem_category": "other"}, [], Status.NURTURE),  # D13: C3 fails
         ({"interest_level": "none", "intent": "other"}, [], Status.NURTURE),  # C4 fails
         ({"buyer_role": "Analyst"}, [], Status.DISQUALIFIED),  # D13: C2 fails
         ({"company_facts": {"employees": 5, "country": "NL", "vertical": "forwarder"}}, [],
-         Status.DISQUALIFIED),  # C1 fails
+         Status.DISQUALIFIED),  # C1 fails on size
+        ({"company_facts": {"employees": 300, "country": "NL", "vertical": "software"}}, [],
+         Status.DISQUALIFIED),  # C1 fails on vertical
+        ({"company_facts": {"country": "France"}}, [], Status.NURTURE),  # D17: region only
         ({"buyer_role": None}, [], Status.NURTURE),  # D13: unknown
         ({"buyer_role": None}, [decision()], Status.QL_CANDIDATE),  # D14
         ({"company_facts": {}}, [decision()], Status.QL_CANDIDATE),  # D14
@@ -376,9 +385,49 @@ def test_stated_israeli_city_becomes_israel_and_routes_to_noa(city: str) -> None
     assert "unverified" in result.owner_basis
 
 
-@pytest.mark.parametrize("country", ["Japan", "France"])
-def test_outside_icp_region_fails_c1_so_no_owner(country: str) -> None:
+@pytest.mark.parametrize(("country", "owner"), [("France", "Triage queue"), ("Japan", "Mei")])
+def test_outside_icp_region_only_is_nurture_routed_by_table(country: str, owner: str) -> None:
+    # D17: C1 fails only on region -> nurture; owner from the QLS §5 routing table.
     facts = {"employees": 300, "vertical": "forwarder", "country": country}
+    result = assess(ctx([extraction(company_facts=facts)]))
+    assert (result.status, result.owner) == (Status.NURTURE, owner)
+    assert result.checklist is not None
+    assert result.checklist.c1_company_fit.failed_on == ["region"]
+    assert "outside ICP regions" in result.owner_basis
+    assert result.score is not None
+
+
+def test_pasted_french_freight_forwarder_goes_to_triage_queue() -> None:
+    # A pasted message through the real pipeline: unknown person, unknown company, France.
+    from app.pipeline import assess_all, build_world
+    from tests.helpers import seed
+
+    bundle = seed()
+    pasted = message(1, email="claire@transmanche-fret.fr").model_copy(update={"id": "UI-IN-001"})
+    facts = {"employees": 120, "vertical": "freight forwarder", "country": "France"}
+    analysis = MessageAnalysis(
+        inbound_id="UI-IN-001",
+        mode=AnalysisMode.LLM,
+        extraction=extraction(company_facts=facts),
+        failure=None,
+    )
+    world = build_world(bundle.crm, [pasted], [], {"UI-IN-001": analysis})
+    (result,) = assess_all(world).values()
+    assert (result.status, result.owner) == (Status.NURTURE, "Triage queue")
+    assert result.checklist is not None
+    assert result.checklist.c1_company_fit.failed_on == ["region"]
+    assert "unverified" in result.owner_basis and "outside ICP regions" in result.owner_basis
+    assert "outside ICP regions" in result.rationale
+
+
+@pytest.mark.parametrize(
+    "facts",
+    [
+        {"employees": 8, "vertical": "freight forwarder", "country": "France"},
+        {"employees": 300, "vertical": "software", "country": "France"},
+    ],
+)
+def test_outside_region_plus_vertical_or_size_fail_is_disqualified(facts: dict[str, Any]) -> None:
     result = assess(ctx([extraction(company_facts=facts)]))
     assert (result.status, result.owner) == (Status.DISQUALIFIED, None)
 

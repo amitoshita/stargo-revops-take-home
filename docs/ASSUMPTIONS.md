@@ -4,9 +4,10 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 
 ## Qualification
 
-- **D1 — Tom Becker (C3).** "Benchmarking carrier quotes" is not a listed pain and BC-3 has no product for it. Accepted by sales but not a QL; C3 shown failing. QL count = 5.
-- **D12 — Accepted but failing C1–C4.** Status `disqualified`, no owner (literal QLS §5). The decision stays visible as "accepted by <rep>" with the failing condition shown. Its pipeline events stay on record.
-- **D13 — Status mapping when not excluded and not all of C1–C4 pass (no acceptance yet).** C1 or C2 fails → `disqualified`, no owner. C3 or C4 fails, or any condition is unknown → `nurture` with the region owner. All four pass → `QL candidate`.
+- **D1 — Tom Becker (C3).** "Benchmarking carrier quotes" is not a listed pain and BC-3 has no product for it. Accepted by sales but not a QL; C3 shown failing. Under D12 he is `nurture`, owner Leo, with a score. QL count = 5.
+- **D12 — Accepted but failing C1–C4 (replaces the earlier "accepted → disqualified" rule).** Acceptance never overrides the gate, and an accepted lead uses the same status map as a non-accepted one (D13): fails C1 or C2 → `disqualified`, no owner; fails C3 or C4 → `nurture` with its owner and a score. The decision stays visible as "accepted by <rep>" with the failing condition shown. Its pipeline events stay on record.
+- **D13 — Status mapping when not excluded and not all of C1–C4 pass.** C2 fails, or C1 fails on vertical or size → `disqualified`, no owner. C1 fails only on region (D17), C3 or C4 fails, or any condition is unknown → `nurture` with its owner. All four pass → `QL candidate` (or `QL` when accepted).
+- **D17 — Outside ICP regions.** If C1 fails only because the region is outside the ICP (vertical and size fit or are unknown) → `nurture`, owner from the QLS §5 routing table, which sends "outside ICP regions" to the Triage queue. If C1 also fails on vertical or size → `disqualified`, no owner. Example: a pasted message from a French freight forwarder → `nurture`, Triage queue. Note: QLS §5 routes "Singapore and APAC" to Mei, so a lead from APAC outside Singapore (e.g. Japan) fails C1 on region but is routed to Mei per that table, not to Triage. *(Amit to confirm.)*
 - **D14 — Accepted with an unknown (none failing).** Not a QL (unknown is not a pass). Stays `QL candidate` with the unknown condition highlighted for the rep. Does not count as a QL.
 - **D9 — Wim Peeters.** "Team Lead" is below manager level → C2 fails → `disqualified` (sales also rejected).
 - **D5a — Sanne Jansen.** "Not interested now, maybe Q2" → `nurture`.
@@ -34,7 +35,7 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 - **D4 — Owners for excluded / suppressed leads.** No owner, except investor → Founders. A suppression log is kept.
 - **D-add — Senders not in the CRM.** Region from the stated country, marked unverified. No country → Triage queue.
 - **Needs-review routing ignores message content.** When a message is flagged (instruction attempt or failed analysis), the owner comes from CRM / company-record facts only, never from facts stated in that message.
-- Consequence of D13: a stated country outside the ICP regions fails C1, so such a lead is `disqualified` (no owner). "Outside ICP regions → Triage queue" therefore applies to `needs review` leads and to leads whose region is unknown.
+- **Outside ICP regions → Triage queue** applies to `nurture` leads whose C1 fails only on region (D17), to `needs review` leads, and to leads whose region is unknown.
 - Region mapping: Benelux = NL, BE, LU; Nordics = SE, NO, DK, FI, IS; UK = GB; DACH = DE, AT, CH. APAC outside Singapore routes to Mei but is outside the ICP regions (C1 region fails).
 
 ## KPI

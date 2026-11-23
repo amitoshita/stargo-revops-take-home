@@ -24,6 +24,7 @@ class QLCondition(_Frozen):
     evidence: list[str] = Field(default_factory=list)
     source: FactSource = "none"
     verified: bool = False
+    failed_on: list[str] = Field(default_factory=list)  # e.g. ["region"], ["vertical", "size"]
 
 
 class QLChecklist(_Frozen):
@@ -52,6 +53,11 @@ class QLChecklist(_Frozen):
     @property
     def failing(self) -> list[str]:
         return [name for name, c in self.first_four().items() if c.status == "fail"]
+
+    @property
+    def c1_fails_only_on_region(self) -> bool:
+        c1 = self.c1_company_fit
+        return c1.status == "fail" and c1.failed_on == ["region"]
 
     @property
     def unknown(self) -> list[str]:
