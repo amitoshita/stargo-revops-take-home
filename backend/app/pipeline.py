@@ -6,7 +6,8 @@ Pure functions over records: no I/O, no LLM. The API and the agent runner call t
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 
 from app.agents.schemas import AnalysisFailure, MessageAnalysis
 from app.core.enums import AnalysisMode
@@ -24,6 +25,12 @@ class World:
     companies: dict[str, CompanyRecord]
     decisions_by_person: dict[str, list[SalesDecision]]
     leads: dict[str, LeadContext]  # only people with at least one inbound
+    # The inputs it was built from, so a past view can be rebuilt (see as_of).
+    crm: list[CrmContact] = field(default_factory=list)
+    inbound: list[InboundMessage] = field(default_factory=list)
+    decisions: list[SalesDecision] = field(default_factory=list)
+    analyses: dict[str, MessageAnalysis] = field(default_factory=dict)
+    event_emails: list[str] = field(default_factory=list)
 
 
 def _company_for(person: Person, companies: Mapping[str, CompanyRecord]) -> CompanyRecord | None:
@@ -59,6 +66,7 @@ def build_world(
     event_emails: Iterable[str] = (),
 ) -> World:
     crm_list, inbound_list, decision_list = list(crm), list(inbound), list(decisions)
+    event_emails = list(event_emails)
     identity = build_identity(
         crm_list,
         inbound_list,
@@ -87,7 +95,36 @@ def build_world(
             analyses=[analyses.get(m.id) or _not_analysed(m.id) for m in person.inbound],
             decisions=by_person.get(pid, []),
         )
-    return World(identity, companies, by_person, leads)
+    return World(
+        identity,
+        companies,
+        by_person,
+        leads,
+        crm=crm_list,
+        inbound=inbound_list,
+        decisions=decision_list,
+        analyses=dict(analyses),
+        event_emails=list(event_emails),
+    )
+
+
+def as_of(world: World, inbound_before: datetime, decisions_before: datetime) -> World:
+    """The world as it stood at a past moment: only messages received before
+    `inbound_before` and decisions dated before `decisions_before`. Later activity cannot
+    change a past week's view."""
+    return build_world(
+        world.crm,
+        [m for m in world.inbound if m.received_at < inbound_before],
+        [d for d in world.decisions if d.decided_at < decisions_before],
+        world.analyses,
+        world.event_emails,
+    )
+
+
+def ran_modes(analyses: Iterable[MessageAnalysis]) -> list[AnalysisMode]:
+    """Modes of analyses that actually ran (an injection stop or a missing analysis runs none)."""
+    ran = [a for a in analyses if a.failure is None or a.failure.kind != "not_analysed"]
+    return sorted({a.mode for a in ran if a.extraction is not None or a.failure is not None})
 
 
 def assess_all(world: World) -> dict[str, Assessment]:

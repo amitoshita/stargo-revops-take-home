@@ -212,9 +212,7 @@ def test_unreported_feed_is_unknown() -> None:
     feeds: dict[Source, FeedStatus] = {
         s: st for s, st in bundle.feed_status.items() if s != Source.NEW_CONNECTION
     }
-    pack = compute_pack(
-        world, assess_all(world), bundle.events, feeds, WEEK_UNDER_REVIEW, datetime.now(UTC)
-    )
+    pack = compute_pack(world, bundle.events, feeds, WEEK_UNDER_REVIEW, datetime.now(UTC))
     row = next(r for r in pack.by_source if r.source == Source.NEW_CONNECTION)
     assert row.count is None
     assert any("new-connection" in c and "not reported" in c for c in pack.caveats)

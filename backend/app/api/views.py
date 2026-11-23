@@ -8,7 +8,8 @@ from app.agents.agent_b import wants_draft
 from app.api.schemas import LeadDetail, LeadRow, MessageOut
 from app.core.timeutil import to_il
 from app.kpi.compute import person_name
-from app.service import Service, Snapshot, ran_modes
+from app.pipeline import ran_modes
+from app.service import Service, Snapshot
 
 CompanySource = Literal["crm", "crm_company_record", "stated", "none"]
 

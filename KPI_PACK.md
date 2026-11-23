@@ -1,7 +1,7 @@
 # Weekly KPI pack
 
 **Week:** Sun 4 Oct – Thu 8 Oct 2026 (Asia/Jerusalem)  
-**Generated:** 2026-11-23 10:49 IL  
+**Generated:** 2026-11-23 11:31 IL  
 **Analysis mode:** recorded fixture
 
 ## Acquisition vs target
@@ -46,6 +46,7 @@
 | PE-001 | Felix Wagner | meeting booked at 2026-09-28 10:00 IL, outside the week |
 | PE-012 | Noam Levi | meeting booked at 2026-10-09 10:00 IL, outside the week |
 | IN-018 | Marcus Hale | QL candidate awaiting sales acceptance (queued) |
+| IN-017 | Priya Nair | QL candidate awaiting sales acceptance (queued) |
 | IN-015 | Lior Ben-David | needs review: a human must decide before it can count |
 | IN-010 | Operations | needs review: a human must decide before it can count |
 | HS-1014 | Lukas Weber | CRM status 'QL (imported 2026-08)' is not evidence (no inbound, no acceptance) |

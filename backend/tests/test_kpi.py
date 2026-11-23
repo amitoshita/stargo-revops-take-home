@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from app.core.enums import AnalysisMode, Source
+from app.core.enums import Source
 from app.core.timeutil import parse_aware
 from app.ingest.loader import SeedBundle
 from app.ingest.schemas import SalesDecision
@@ -16,7 +16,6 @@ from app.kpi.compute import compute_pack
 from app.kpi.export import CRO_HEADING, export, render
 from app.kpi.schemas import KpiPack
 from app.kpi.window import WEEK_UNDER_REVIEW, ReportingWindow
-from app.pipeline import assess_all
 from tests.helpers import seed, seed_world
 
 GENERATED = datetime(2026, 10, 11, 15, 0, tzinfo=UTC)
@@ -25,8 +24,7 @@ GENERATED = datetime(2026, 10, 11, 15, 0, tzinfo=UTC)
 def pack_for(bundle: SeedBundle, window: ReportingWindow = WEEK_UNDER_REVIEW) -> KpiPack:
     world = seed_world(bundle)
     return compute_pack(
-        world, assess_all(world), bundle.events, bundle.feed_status, window, GENERATED,
-        [AnalysisMode.LLM],
+        world, bundle.events, bundle.feed_status, window, GENERATED
     )  # fmt: skip
 
 

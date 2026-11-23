@@ -9,10 +9,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from app.core.enums import AnalysisMode, Source, Status
-from app.core.timeutil import to_il
+from app.core.enums import Source, Status
+from app.core.timeutil import il_midnight, to_il
 from app.ingest.identity import Person
 from app.ingest.schemas import FeedStatus, PipelineEvent, SalesDecision
 from app.kpi.schemas import (
@@ -26,9 +26,8 @@ from app.kpi.schemas import (
     SourceRow,
 )
 from app.kpi.window import ReportingWindow
-from app.pipeline import World
+from app.pipeline import World, as_of, assess_all, ran_modes
 from app.rules.exclusions import is_pre_existing_deal
-from app.rules.schemas import Assessment
 
 LABELS: dict[MetricKey, str] = {
     "qls": "QLs",
@@ -85,14 +84,26 @@ def _first_acceptance(decisions: list[SalesDecision]) -> datetime | None:
 
 
 def compute_pack(
-    world: World,
-    assessments: Mapping[str, Assessment],
+    full: World,
     events: Iterable[PipelineEvent],
     feed_status: Mapping[Source, FeedStatus],
     window: ReportingWindow,
     generated_at: datetime,
-    modes: Iterable[AnalysisMode] = (),
 ) -> KpiPack:
+    """The pack for one week, as it stood then. Built from messages received before the next
+    reporting week starts (so Fri/Sat queued inbound counts) and decisions dated before the
+    week ends. Later activity cannot change it; later decisions are only listed as "outside
+    the week" for people who had an inbound by then."""
+    next_start = il_midnight(window.sunday + timedelta(days=7))
+    world = as_of(full, next_start, window.end_exclusive)
+    assessments = assess_all(world)
+
+    def listable(person: Person | None, moment: datetime) -> bool:
+        """Show a record outside the week only for people known by then."""
+        if person is not None and person.inbound:
+            return True
+        return moment < next_start
+
     records: dict[MetricKey, list[RecordRef]] = {key: [] for key in TARGETS}
     expansion: dict[str, list[RecordRef]] = {
         "accepted": [],
@@ -163,6 +174,20 @@ def compute_pack(
             continue
         qls.append((latest.decided_at, person, _decision_ref(latest, person)))
 
+    for late in sorted(full.decisions, key=lambda d: (d.decided_at, d.id)):
+        if late.decided_at < window.end_exclusive:
+            continue  # already in the as-of view
+        who = world.identity.person_for_contact(*late.identity_keys)
+        if who is None or not listable(who, late.decided_at):
+            continue
+        excluded.append(
+            ExcludedRecord(
+                record_id=late.id,
+                name=person_name(who),
+                reason=f"decided {_il(late.decided_at)} IL, outside the week",
+            )
+        )
+
     qls.sort(key=lambda item: (item[0], item[2].record_id))
     records["qls"] = [ref for _, _, ref in qls]
 
@@ -171,6 +196,8 @@ def compute_pack(
         who = world.identity.person_for_email(event.contact_email)
         name = person_name(who) if who else None
         if not window.contains(event.occurred_at):
+            if not listable(who, event.occurred_at):
+                continue
             excluded.append(
                 ExcludedRecord(
                     record_id=event.id,
@@ -290,7 +317,7 @@ def compute_pack(
         week_start=window.sunday,
         week_end=window.last_day,
         generated_at=generated_at,
-        analysis_modes=sorted(set(modes)),
+        analysis_modes=ran_modes(a for ctx in world.leads.values() for a in ctx.analyses),
         metrics=[
             KpiMetric(
                 key=k,

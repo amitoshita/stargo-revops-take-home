@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -275,14 +274,9 @@ class Service:
             raise ServiceError(422, ["week must start on a Sunday (Asia/Jerusalem)"])
         snap = self.snapshot()
         pack = compute_pack(
-            snap.world,
-            snap.assessments,
-            self.repo.list_events(),
-            self.repo.feed_status(),
-            ReportingWindow(week),
+            snap.world, self.repo.list_events(), self.repo.feed_status(), ReportingWindow(week),
             now_il(),
-            modes=ran_modes(snap.analyses.values()),
-        )
+        )  # fmt: skip
         self.repo.put_doc(KPI, week.isoformat(), pack)
         return pack
 
@@ -425,18 +419,6 @@ class Service:
 
     def ingest_errors(self) -> list[IngestError]:
         return self.repo.list_ingest_errors()
-
-
-def ran_modes(analyses: Iterable[MessageAnalysis]) -> list[AnalysisMode]:
-    """Modes of analyses that actually ran (an injection stop runs no analysis)."""
-    return sorted(
-        {
-            a.mode
-            for a in analyses
-            if a.extraction is not None
-            or (a.failure is not None and a.failure.kind != "not_analysed")
-        }
-    )
 
 
 _PLAIN_NAME = re.compile(r"^[^\W\d_](?:[^\W\d_]|['-]){0,29}$")

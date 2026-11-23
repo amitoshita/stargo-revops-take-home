@@ -38,7 +38,7 @@ def _downstream(
         pid: f"{a.status.value} / {a.owner or '—'}" for pid, a in sorted(assessments.items())
     }
     pack = compute_pack(
-        world, assessments, bundle.events, bundle.feed_status, WEEK_UNDER_REVIEW,
+        world, bundle.events, bundle.feed_status, WEEK_UNDER_REVIEW,
         datetime.now(IL_TZ),
     )  # fmt: skip
     kpi = " / ".join(str(m.actual) for m in pack.metrics)

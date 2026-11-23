@@ -49,7 +49,7 @@ def test_kpi_from_committed_fixtures_matches_plan_records() -> None:
     from app.core.timeutil import IL_TZ
     from app.kpi.compute import compute_pack
     from app.kpi.window import WEEK_UNDER_REVIEW
-    from app.pipeline import assess_all, build_world
+    from app.pipeline import build_world
 
     if not FIXTURES.directory.is_dir():
         return
@@ -60,7 +60,7 @@ def test_kpi_from_committed_fixtures_matches_plan_records() -> None:
         [e.contact_email for e in bundle.events],
     )  # fmt: skip
     pack = compute_pack(
-        world, assess_all(world), bundle.events, bundle.feed_status, WEEK_UNDER_REVIEW,
+        world, bundle.events, bundle.feed_status, WEEK_UNDER_REVIEW,
         datetime.now(IL_TZ),
     )  # fmt: skip
     records = {m.key: [r.record_id for r in m.records] for m in pack.metrics}
