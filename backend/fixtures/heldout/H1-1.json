@@ -1,0 +1,9 @@
+{
+  "inbound_id": "H1-1",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:46:24.184510Z",
+  "message_sha256": "4ab0969e15c48422725d6113558a0378a8e68669856981cb9a661ce20ec85d8b",
+  "raw": "{\"language\":\"en\",\"intent\":\"demo\",\"interest_level\":\"explicit_request\",\"buyer_role\":\"Owner\",\"data_problem\":\"Planners manually retype CMRs and delivery notes from PDFs into the TMS.\",\"problem_category\":\"document_extraction\",\"volume_stated\":false,\"company_facts\":{\"company_name\":\"Van der Berg Transport\",\"employees\":60,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Can we book a demo?\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Can we book a demo?\",\"translation\":null},{\"field\":\"buyer_role\",\"quote\":\"I founded Van der Berg Transport\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"Our planners retype CMRs and delivery notes from PDFs into our TMS every day.\",\"translation\":null},{\"field\":\"company_facts\",\"quote\":\"I founded Van der Berg Transport 12 years ago, we are 60 people now.\",\"translation\":null}]}",
+  "error": null
+}

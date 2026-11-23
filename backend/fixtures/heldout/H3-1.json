@@ -1,0 +1,9 @@
+{
+  "inbound_id": "H3-1",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:46:46.040885Z",
+  "message_sha256": "eeca23cff7b1750ea4334f146c91bc0997e015aea0a5606db29d7816a9a31159",
+  "raw": "{\"language\":\"de\",\"intent\":\"pilot\",\"interest_level\":\"explicit_request\",\"buyer_role\":\"Operations Manager\",\"data_problem\":\"Manually checking hundreds of freight invoices each month against contracts\",\"problem_category\":\"invoice_reconciliation\",\"volume_stated\":true,\"company_facts\":{\"company_name\":\"Rhein Logistik\",\"employees\":180,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"next_weeks\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Wäre ein Pilot im Januar möglich?\",\"translation\":\"Would a pilot be possible in January?\"},{\"field\":\"buyer_role\",\"quote\":\"ich leite den Betrieb bei Rhein Logistik\",\"translation\":\"I run the operation at Rhein Logistik\"},{\"field\":\"data_problem\",\"quote\":\"Wir prüfen jeden Monat Hunderte Frachtrechnungen manuell gegen unsere Verträge.\",\"translation\":\"We check hundreds of freight invoices manually each month against our contracts.\"},{\"field\":\"company_facts\",\"quote\":\"Rhein Logistik (180 Mitarbeiter)\",\"translation\":\"Rhein Logistik (180 employees)\"},{\"field\":\"timing\",\"quote\":\"im Januar\",\"translation\":\"in January\"},{\"field\":\"interest\",\"quote\":\"Wäre ein Pilot im Januar möglich?\",\"translation\":\"Would a pilot be possible in January?\"}]}",
+  "error": null
+}

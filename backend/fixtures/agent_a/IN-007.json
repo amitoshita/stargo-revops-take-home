@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-007",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:43:37.517327Z",
+  "message_sha256": "c7589f6639b4491ab25f1cd4cb6f78595da60b9c58c6e245e943bda805a86d8a",
+  "raw": "{\"language\":\"en\",\"intent\":\"other\",\"interest_level\":\"soft_positive\",\"buyer_role\":null,\"data_problem\":\"Extracting data from bills of lading\",\"problem_category\":\"document_extraction\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"later\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Attached are the 20 sample bills of lading for the PoC, as agreed.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Let me know if you need anything else before our review on the 14th.\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"20 sample bills of lading\",\"translation\":null},{\"field\":\"timing\",\"quote\":\"review on the 14th\",\"translation\":null}]}",
+  "error": null
+}

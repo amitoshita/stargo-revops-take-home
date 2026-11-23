@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-011",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:44:11.756751Z",
+  "message_sha256": "961c0d871ecf8cf690bfd3d00385216769f36dede0a1094839fc2150a3150c42",
+  "raw": "{\"language\":\"en\",\"intent\":\"pricing\",\"interest_level\":\"explicit_request\",\"buyer_role\":\"Owner\",\"data_problem\":\"Manual processing of import declarations from supplier invoices and packing lists.\",\"problem_category\":\"document_extraction\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":40,\"country\":\"Israel\",\"vertical\":\"customs brokerage\",\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"What would document automation cost us, and can we see it working?\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"What would document automation cost us, and can we see it working?\",\"translation\":null},{\"field\":\"buyer_role\",\"quote\":\"I own a 40-person customs brokerage in Haifa.\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"We process import declarations from supplier invoices and packing lists manually.\",\"translation\":null},{\"field\":\"company_facts\",\"quote\":\"I own a 40-person customs brokerage in Haifa.\",\"translation\":null}]}",
+  "error": null
+}

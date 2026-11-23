@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-006",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:43:27.029850Z",
+  "message_sha256": "a38227b4da4e213cdf94b04a5fefe52ae8c747ff0176db96e871bb20065fb6ef",
+  "raw": "{\"language\":\"en\",\"intent\":\"pricing\",\"interest_level\":\"explicit_request\",\"buyer_role\":null,\"data_problem\":null,\"problem_category\":\"none\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Please send pricing.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Please send pricing.\",\"translation\":null}]}",
+  "error": null
+}

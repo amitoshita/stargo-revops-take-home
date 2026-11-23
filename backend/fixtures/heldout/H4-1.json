@@ -1,0 +1,9 @@
+{
+  "inbound_id": "H4-1",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:46:56.380899Z",
+  "message_sha256": "c52af7bc929e3d7970d3e0bd526766fe12a0b80f33def07ba56f33455997db54",
+  "raw": "{\"language\":\"en\",\"intent\":\"pricing\",\"interest_level\":\"explicit_request\",\"buyer_role\":null,\"data_problem\":\"Handling 300 rate requests per week by email.\",\"problem_category\":\"rate_quoting\",\"volume_stated\":true,\"company_facts\":{\"company_name\":null,\"employees\":120,\"country\":\"France\",\"vertical\":\"freight forwarding\",\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"How much would rate quoting automation cost?\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"How much would rate quoting automation cost?\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"We answer around 300 rate requests a week by email.\",\"translation\":null},{\"field\":\"company_facts\",\"quote\":\"We are a freight forwarder in Lyon with 120 staff.\",\"translation\":null}]}",
+  "error": null
+}

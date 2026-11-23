@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-009",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:43:58.740175Z",
+  "message_sha256": "527fe41374128a4a76d46ddc1c4cd8b21e7c6c93fc9c3f6b5c8ba2a8a6c40525",
+  "raw": "{\"language\":\"en\",\"intent\":\"other\",\"interest_level\":\"meeting_request\",\"buyer_role\":\"Logistics Procurement\",\"data_problem\":\"manual benchmarking of carrier quotes\",\"problem_category\":\"other\",\"volume_stated\":true,\"company_facts\":{\"company_name\":\"Kestrel\",\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Open to a 30-minute call.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Open to a 30-minute call.\",\"translation\":null},{\"field\":\"buyer_role\",\"quote\":\"I run logistics procurement at Kestrel.\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"benchmarking carrier quotes is still manual.\",\"translation\":null},{\"field\":\"company_facts\",\"quote\":\"Kestrel\",\"translation\":null}]}",
+  "error": null
+}

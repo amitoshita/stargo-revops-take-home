@@ -1,0 +1,9 @@
+{
+  "inbound_id": "H6-2",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:47:15.692527Z",
+  "message_sha256": "3464b805f46c1d28ea56edfd98f61db0311389157864024913e8d7e2c83d2103",
+  "raw": "{\"language\":\"en\",\"intent\":\"not interested\",\"interest_level\":\"declined\",\"buyer_role\":null,\"data_problem\":null,\"problem_category\":\"none\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Thanks, but we went with another vendor.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Thanks, but we went with another vendor.\",\"translation\":null}]}",
+  "error": null
+}

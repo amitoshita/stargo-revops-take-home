@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-021",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:45:42.256433Z",
+  "message_sha256": "7350f6d9342141da20b838f0d7220bdae40296e4e6cc2682f9f709130737666a",
+  "raw": "{\"language\":\"en\",\"intent\":\"demo\",\"interest_level\":\"explicit_request\",\"buyer_role\":null,\"data_problem\":\"They need automation for rate quoting.\",\"problem_category\":\"rate_quoting\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Requesting a demo of rate quoting automation.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Requesting a demo of rate quoting automation.\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"rate quoting automation\",\"translation\":null}]}",
+  "error": null
+}

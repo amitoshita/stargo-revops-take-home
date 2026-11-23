@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-013",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:44:33.239462Z",
+  "message_sha256": "642249e2d3fbdd2d55e091b2ba1f7d56207cdc1c014a8db00730dfa3bfca9840",
+  "raw": "{\"language\":\"nl\",\"intent\":\"not interested\",\"interest_level\":\"declined\",\"buyer_role\":null,\"data_problem\":null,\"problem_category\":\"none\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"later\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Op dit moment hebben we geen interesse, misschien weer in Q2.\",\"translation\":\"At the moment we have no interest, maybe again in Q2.\"},{\"field\":\"interest\",\"quote\":\"Op dit moment hebben we geen interesse, misschien weer in Q2.\",\"translation\":\"At the moment we have no interest, maybe again in Q2.\"},{\"field\":\"timing\",\"quote\":\"misschien weer in Q2\",\"translation\":\"maybe again in Q2\"}]}",
+  "error": null
+}

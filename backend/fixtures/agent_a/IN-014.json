@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-014",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:44:42.547295Z",
+  "message_sha256": "e9784d9295bbad707ff139718ddf09b52b8620b3c3a1f6979e6cb6138d418c38",
+  "raw": "{\"language\":\"en\",\"intent\":\"unsubscribe\",\"interest_level\":\"declined\",\"buyer_role\":null,\"data_problem\":null,\"problem_category\":\"none\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Please remove me from your mailing list.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Please remove me from your mailing list.\",\"translation\":null}]}",
+  "error": null
+}

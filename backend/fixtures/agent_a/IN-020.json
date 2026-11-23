@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-020",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:45:32.128185Z",
+  "message_sha256": "557ac8e76ea20adeea5626810079c9b124a072fdcf5d80fb3055a836a187cb90",
+  "raw": "{\"language\":\"en\",\"intent\":\"other\",\"interest_level\":\"soft_positive\",\"buyer_role\":null,\"data_problem\":\"manual booking entry\",\"problem_category\":\"other\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Happy to chat if useful.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Happy to chat if useful.\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"manual booking entry\",\"translation\":null}]}",
+  "error": null
+}

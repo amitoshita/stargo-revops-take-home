@@ -1,0 +1,9 @@
+{
+  "inbound_id": "H2-1",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:46:35.807539Z",
+  "message_sha256": "ade539d1dca070c6f34944777a4f40efb0b6f9c52856ac2fb0da66bcf56a796e",
+  "raw": "{\"language\":\"en\",\"intent\":\"demo\",\"interest_level\":\"explicit_request\",\"buyer_role\":null,\"data_problem\":\"Manual spreadsheet comparison of carrier quotes\",\"problem_category\":\"rate_quoting\",\"volume_stated\":true,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":\"home goods retail\",\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Could you show us what you have?\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Could you show us what you have?\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"Comparing them side by side is still a spreadsheet job.\",\"translation\":null},{\"field\":\"company_facts\",\"quote\":\"home goods retailer\",\"translation\":null}]}",
+  "error": null
+}

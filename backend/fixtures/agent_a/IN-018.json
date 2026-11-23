@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-018",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:45:21.952484Z",
+  "message_sha256": "265a346974c99611668785bb7cc1ff7296232b8aef3dd45763b10e0dac24a592",
+  "raw": "{\"language\":\"en\",\"intent\":\"demo\",\"interest_level\":\"explicit_request\",\"buyer_role\":null,\"data_problem\":\"Rate cards are stored in about 40 spreadsheets.\",\"problem_category\":\"rate_quoting\",\"volume_stated\":true,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Yes please, send me times for a demo.\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Yes please, send me times for a demo.\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"Our rate cards live in about 40 spreadsheets.\",\"translation\":null}]}",
+  "error": null
+}

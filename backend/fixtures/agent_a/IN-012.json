@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-012",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:44:22.280637Z",
+  "message_sha256": "671176401712b1df8fbc2fb44a0348409ddcc39bc4249056f8eca5d12e98f83b",
+  "raw": "{\"language\":\"he\",\"intent\":\"demo\",\"interest_level\":\"meeting_request\",\"buyer_role\":null,\"data_problem\":\"Manual pricing of dozens of quote requests received via WhatsApp and email.\",\"problem_category\":\"rate_quoting\",\"volume_stated\":true,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"this_week\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"אשמח לשיחה השבוע.\",\"translation\":\"I would like a conversation this week.\"},{\"field\":\"interest\",\"quote\":\"אשמח לשיחה השבוע.\",\"translation\":\"I would like a conversation this week.\"},{\"field\":\"data_problem\",\"quote\":\"אנחנו מקבלים עשרות בקשות להצעות מחיר ביום בוואטסאפ ובמייל ומתמחרים הכול ידנית.\",\"translation\":\"We receive dozens of price quote requests per day via WhatsApp and email and price everything manually.\"},{\"field\":\"timing\",\"quote\":\"אשמח לשיחה השבוע.\",\"translation\":\"I would like a conversation this week.\"}]}",
+  "error": null
+}

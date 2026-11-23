@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-005",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:43:16.958809Z",
+  "message_sha256": "f6415a6f65a65009510d87e893bcbd959e8059185c698791c96443eb158e7ef7",
+  "raw": "{\"language\":\"en\",\"intent\":\"pilot\",\"interest_level\":\"explicit_request\",\"buyer_role\":null,\"data_problem\":\"Manual rate quoting from Excel spreadsheets.\",\"problem_category\":\"rate_quoting\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"this_quarter\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Pilot enquiry\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"we want to see how you automate rate quoting and whether a 4-week pilot is possible this quarter\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"Our pricing team handles RFQs from more than 30 customers, all in Excel.\",\"translation\":null},{\"field\":\"timing\",\"quote\":\"whether a 4-week pilot is possible this quarter\",\"translation\":null}]}",
+  "error": null
+}

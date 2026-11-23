@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-008",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:43:48.385985Z",
+  "message_sha256": "2c67f44402a99e8f1487becdfb6a4ed7e2d1071494301385c6aff396c20bc3db",
+  "raw": "{\"language\":\"en\",\"intent\":\"partnership\",\"interest_level\":\"meeting_request\",\"buyer_role\":null,\"data_problem\":null,\"problem_category\":\"none\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":true},\"timing\":\"this_week\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Partnership\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Do you have 30 minutes this week?\",\"translation\":null},{\"field\":\"company_facts\",\"quote\":\"We build freight pricing software\",\"translation\":null},{\"field\":\"timing\",\"quote\":\"Do you have 30 minutes this week?\",\"translation\":null}]}",
+  "error": null
+}

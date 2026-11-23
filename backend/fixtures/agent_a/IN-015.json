@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-015",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:44:52.188276Z",
+  "message_sha256": "5e65b83e8966bc3242824b4eb1bd065951c1dfd6b1eede0887c32ebbf5d7ad50",
+  "raw": "{\"language\":\"en\",\"intent\":\"job seeker\",\"interest_level\":\"none\",\"buyer_role\":\"data science student\",\"data_problem\":null,\"problem_category\":\"none\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"I would love to join Stargo as an intern.\",\"translation\":null},{\"field\":\"buyer_role\",\"quote\":\"I am a data science student\",\"translation\":null}]}",
+  "error": null
+}

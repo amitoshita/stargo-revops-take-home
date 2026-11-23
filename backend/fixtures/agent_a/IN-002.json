@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-002",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:42:47.150947Z",
+  "message_sha256": "7bd31b04a6743ff65e63da330ef893bf2c4e90f5dd7504cba750ac8973df7626",
+  "raw": "{\"language\":\"en\",\"intent\":\"other\",\"interest_level\":\"meeting_request\",\"buyer_role\":null,\"data_problem\":\"Manual re-keying of booking confirmations and invoices from PDFs\",\"problem_category\":\"document_extraction\",\"volume_stated\":true,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"this_week\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Can we talk on Sunday or Monday?\",\"translation\":null},{\"field\":\"interest\",\"quote\":\"Can we talk on Sunday or Monday?\",\"translation\":null},{\"field\":\"data_problem\",\"quote\":\"Our team re-keys booking confirmations and invoices from PDFs into our TMS by hand, roughly 1,500 documents a month.\",\"translation\":null},{\"field\":\"timing\",\"quote\":\"Can we talk on Sunday or Monday?\",\"translation\":null}]}",
+  "error": null
+}

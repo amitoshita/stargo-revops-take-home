@@ -1,0 +1,9 @@
+{
+  "inbound_id": "IN-004",
+  "model": "openai/gpt-oss-120b",
+  "prompt_version": "agent-a-v4",
+  "recorded_at": "2026-11-23T07:43:07.340243Z",
+  "message_sha256": "90969f20c17d0a476a19c42069d25fe1dfaf65b5dbb073f70a61be731cb6eea9",
+  "raw": "{\"language\":\"en\",\"intent\":\"auto-reply\",\"interest_level\":\"none\",\"buyer_role\":null,\"data_problem\":null,\"problem_category\":\"none\",\"volume_stated\":false,\"company_facts\":{\"company_name\":null,\"employees\":null,\"country\":null,\"vertical\":null,\"is_software_vendor\":false},\"timing\":\"none\",\"instruction_attempt\":false,\"evidence\":[{\"field\":\"intent\",\"quote\":\"Automatic reply: Following up\",\"translation\":null}]}",
+  "error": null
+}

@@ -38,3 +38,35 @@ def test_committed_fixtures_load_and_validate() -> None:
             continue
         analysis = analyze_message(message, client=None, fixtures=FIXTURES)
         assert analysis.mode == AnalysisMode.RECORDED_FIXTURE, message.id
+        if message.id != "IN-015":  # recorded with a quote not in the message (kept as-is)
+            assert analysis.extraction is not None, message.id
+
+
+def test_kpi_from_committed_fixtures_matches_plan_records() -> None:
+    """The real (recorded) Agent A answers give the §8 KPI records, not just the counts."""
+    from datetime import datetime
+
+    from app.core.timeutil import IL_TZ
+    from app.kpi.compute import compute_pack
+    from app.kpi.window import WEEK_UNDER_REVIEW
+    from app.pipeline import assess_all, build_world
+
+    if not FIXTURES.directory.is_dir():
+        return
+    bundle = seed()
+    analyses = {m.id: analyze_message(m, client=None, fixtures=FIXTURES) for m in bundle.inbound}
+    world = build_world(
+        bundle.crm, bundle.inbound, bundle.decisions, analyses,
+        [e.contact_email for e in bundle.events],
+    )  # fmt: skip
+    pack = compute_pack(
+        world, assess_all(world), bundle.events, bundle.feed_status, WEEK_UNDER_REVIEW,
+        datetime.now(IL_TZ),
+    )  # fmt: skip
+    records = {m.key: [r.record_id for r in m.records] for m in pack.metrics}
+    assert records == {
+        "qls": ["SD-001", "SD-002", "SD-004", "SD-008", "SD-009"],
+        "meetings_booked": ["PE-003", "PE-004", "PE-007", "PE-010"],
+        "meetings_held": ["PE-002", "PE-005", "PE-008"],
+        "opportunities": ["PE-009", "PE-011"],
+    }
