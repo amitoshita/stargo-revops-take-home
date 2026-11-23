@@ -92,16 +92,14 @@ def compute_pack(
 ) -> KpiPack:
     """The pack for one week, as it stood then. Built from messages received before the next
     reporting week starts (so Fri/Sat queued inbound counts) and decisions dated before the
-    week ends. Later activity cannot change it; later decisions are only listed as "outside
-    the week" for people who had an inbound by then."""
+    week ends. Later activity cannot change it. Records outside the week are listed only if
+    dated before the next week began (e.g. a Friday decision or a Friday meeting)."""
     next_start = il_midnight(window.sunday + timedelta(days=7))
     world = as_of(full, next_start, window.end_exclusive)
     assessments = assess_all(world)
 
-    def listable(person: Person | None, moment: datetime) -> bool:
-        """Show a record outside the week only for people known by then."""
-        if person is not None and person.inbound:
-            return True
+    def listable(moment: datetime) -> bool:
+        """One principle: the pack shows only what was known before the next week began."""
         return moment < next_start
 
     records: dict[MetricKey, list[RecordRef]] = {key: [] for key in TARGETS}
@@ -178,7 +176,7 @@ def compute_pack(
         if late.decided_at < window.end_exclusive:
             continue  # already in the as-of view
         who = world.identity.person_for_contact(*late.identity_keys)
-        if who is None or not listable(who, late.decided_at):
+        if who is None or not listable(late.decided_at):
             continue
         excluded.append(
             ExcludedRecord(
@@ -196,7 +194,7 @@ def compute_pack(
         who = world.identity.person_for_email(event.contact_email)
         name = person_name(who) if who else None
         if not window.contains(event.occurred_at):
-            if not listable(who, event.occurred_at):
+            if not listable(event.occurred_at):
                 continue
             excluded.append(
                 ExcludedRecord(

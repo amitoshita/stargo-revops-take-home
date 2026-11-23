@@ -1,7 +1,7 @@
 # Weekly KPI pack
 
 **Week:** Sun 4 Oct – Thu 8 Oct 2026 (Asia/Jerusalem)  
-**Generated:** 2026-11-23 11:34 IL  
+**Generated:** 2026-11-23 11:36 IL  
 **Analysis mode:** recorded fixture
 
 ## Acquisition vs target
@@ -42,7 +42,6 @@
 | SD-003 | Rachel Lim | superseded by later decision SD-004 (latest decision wins) |
 | SD-007 | Tom Becker | accepted, but status is nurture: Nurture: C3 stated problem is not one Stargo solves. Evidence: "benchmarking carrier quotes is still manual." |
 | SD-011 | Felix Wagner | decided 2026-09-24 12:00 IL, outside the week |
-| SD-010 | Priya Nair | decided 2026-10-11 09:00 IL, outside the week |
 | PE-001 | Felix Wagner | meeting booked at 2026-09-28 10:00 IL, outside the week |
 | PE-012 | Noam Levi | meeting booked at 2026-10-09 10:00 IL, outside the week |
 | IN-018 | Marcus Hale | QL candidate awaiting sales acceptance (queued) |

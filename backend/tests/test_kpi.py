@@ -103,7 +103,8 @@ def test_golden_sources() -> None:
 def test_golden_exclusions_are_explained() -> None:
     reasons = {e.record_id: e.reason for e in pack_for(seed()).excluded}
     assert "superseded" in reasons["SD-003"]  # Rachel logged twice, counted once
-    assert "outside the week" in reasons["SD-010"]  # Priya, decided 11 Oct
+    assert "SD-010" not in reasons  # Priya, decided Sun 11 Oct 09:00: after the cutoff
+    assert "queued" in reasons["IN-017"]  # so she shows as a queued QL candidate instead
     assert "outside the week" in reasons["SD-011"]  # Felix, decided 24 Sep
     assert reasons["SD-006"] == "rejected"  # Wim
     assert "nurture" in reasons["SD-007"] and "C3" in reasons["SD-007"]  # Tom
