@@ -30,6 +30,22 @@ from app.rules.injection import detect_instruction_attempt
 
 HELDOUT = REPO_ROOT / "backend" / "tests" / "heldout_messages.md"
 MARKER = "## Held-out set"
+FINDINGS = "## Findings"
+
+# Expected-label errors, confirmed by Amit after the run. The held-out file is not edited;
+# these are applied only to the second score so both are visible. (case, field) ->
+# (corrected expectation, reason).
+_DOMAIN = (
+    "routed from the email's country domain; D-add / QLS §3: region only from a stated country"
+)
+_NAME = "vertical assumed from the company name; QLS §3: vertical stays unknown unless stated"
+LABEL_ERRORS: dict[tuple[str, str], tuple[str, str]] = {
+    ("H1", "owner"): ("Triage queue", _DOMAIN),
+    ("H1", "status"): ("nurture", f"{_DOMAIN}; {_NAME}"),
+    ("H3", "owner"): ("Triage queue", _DOMAIN),
+    ("H3", "status"): ("nurture", f"{_DOMAIN}; {_NAME}"),
+    ("H6", "owner"): ("Triage queue", _DOMAIN),
+}
 
 
 def _record(cases: list[HeldoutCase], store: FixtureStore, pause: float) -> None:
@@ -102,7 +118,7 @@ def evaluate(cases: list[HeldoutCase], store: FixtureStore) -> str:
     assessments = assess_all(world)
 
     rows: list[str] = []
-    agree = total = 0
+    agree = total = corrected_agree = 0
     for case in cases:
         messages = case.inbound()
         person = world.identity.person_for_email(messages[0].email or "")
@@ -127,15 +143,20 @@ def evaluate(cases: list[HeldoutCase], store: FixtureStore) -> str:
         for key, expected in case.expected.items():
             value = got.get(key, "—")
             same = value.casefold() == expected.casefold()
+            fix = LABEL_ERRORS.get((case.case_id, key))
+            corrected = fix[0] if fix else expected
             agree += same
+            corrected_agree += value.casefold() == corrected.casefold()
             total += 1
+            note = f"label error → {corrected}" if fix else ""
             rows.append(
-                f"| {case.case_id} | {key} | {expected} | {value} | {'✔' if same else '✘'} |"
+                f"| {case.case_id} | {key} | {expected} | {value} | {'✔' if same else '✘'} "
+                f"| {note} |"
             )
         if failures:
-            rows.append(f"| {case.case_id} | analysis | — | failed: {', '.join(failures)} | |")
+            rows.append(f"| {case.case_id} | analysis | — | failed: {', '.join(failures)} | | |")
         if assessment is not None:
-            rows.append(f"| {case.case_id} | rationale | | {assessment.rationale} | |")
+            rows.append(f"| {case.case_id} | rationale | | {assessment.rationale} | | |")
 
     lines = [
         MARKER,
@@ -143,13 +164,22 @@ def evaluate(cases: list[HeldoutCase], store: FixtureStore) -> str:
         f"Prompt `{PROMPT_VERSION}` frozen before this run. {len(cases)} cases, "
         f"{len(inbound)} messages, through the full pipeline (identity → rules → routing).",
         "",
-        f"Agreement on expected fields: **{agree}/{total}**.",
+        f"- Agreement as recorded (expected labels unchanged): **{agree}/{total}**.",
+        f"- Agreement with the expected-label errors corrected: **{corrected_agree}/{total}**.",
         "",
-        "| Case | Field | Expected | Got | Same |",
-        "|---|---|---|---|---|",
+        "| Case | Field | Expected | Got | Same | Note |",
+        "|---|---|---|---|---|---|",
         *rows,
         "",
-    ]
+        "### Expected-label errors",
+        "",
+        "The held-out file is unchanged. These expected values contradict decided rules, so the",
+        "second score uses the corrected value; the first score keeps the original label.",
+        "",
+        *(f"- {c} {f}: expected '{next(x.expected[f] for x in cases if x.case_id == c)}', "
+          f"corrected '{v}'. Reason: {r}." for (c, f), (v, r) in LABEL_ERRORS.items()),
+        "",
+    ]  # fmt: skip
     return "\n".join(lines)
 
 
@@ -170,7 +200,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.write:
         current = args.write.read_text(encoding="utf-8") if args.write.exists() else ""
         head = current.split(MARKER)[0].rstrip()
-        args.write.write_text((head + "\n\n" if head else "") + text, encoding="utf-8")
+        tail = FINDINGS + current.split(FINDINGS, 1)[1] if FINDINGS in current else ""
+        parts = [p for p in (head, text.rstrip(), tail.rstrip()) if p]
+        args.write.write_text("\n\n".join(parts) + "\n", encoding="utf-8")
     return 0
 
 

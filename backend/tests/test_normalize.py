@@ -123,6 +123,26 @@ def test_vertical() -> None:
 
 
 @pytest.mark.parametrize(
+    ("stated", "vertical"),
+    [
+        ("home goods retail", "shipper"),  # found via the held-out set (H2)
+        ("Home goods retailer", "shipper"),
+        ("food manufacturing", "shipper"),
+        ("Electronics manufacturer", "shipper"),
+        ("wholesaler", "shipper"),
+        ("e-commerce", "shipper"),
+        ("consumer goods", "shipper"),
+        ("FMCG", "shipper"),
+        ("software vendor", "software-vendor"),  # not a freight buyer
+        ("bank", "bank"),
+        ("Freight Forwarder", "freight-forwarder"),  # exact alias wins
+    ],
+)
+def test_freight_buyers_map_to_shipper(stated: str, vertical: str) -> None:
+    assert normalize_vertical(stated) == vertical
+
+
+@pytest.mark.parametrize(
     ("stated", "name"),
     [("Haifa", "Israel"), ("Rotterdam", "Netherlands"), ("London", "United Kingdom"),
      ("Israel", "Israel"), ("UK", "UK"), ("Atlantis", "Atlantis"), ("  ", None), (None, None)],

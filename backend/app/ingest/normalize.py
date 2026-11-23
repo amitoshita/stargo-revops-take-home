@@ -215,8 +215,21 @@ ICP_VERTICALS: frozenset[str] = frozenset(
 VENDOR_VERTICALS: frozenset[str] = frozenset({"software-vendor", "software", "saas"})
 
 
+# Buyers of freight (QLS C1 "shippers with material freight spend"). Matched on whole words,
+# so "home goods retailer" or "food manufacturing" map to shipper. Freight spend stays
+# unverified: the vertical comes from what the sender states.
+_SHIPPER_WORDS = re.compile(
+    r"\b(retail|retailer|retailers|manufacturer|manufacturers|manufacturing|wholesale|"
+    r"wholesaler|distributor|importer|exporter|e-?commerce|ecommerce|fmcg|consumer goods)\b"
+)
+
+
 def normalize_vertical(value: str | None) -> str | None:
     if value is None or not value.strip():
         return None
     slug = re.sub(r"[\s_/]+", "-", value.strip().lower())
-    return _VERTICAL_ALIASES.get(slug, slug)
+    if slug in _VERTICAL_ALIASES:
+        return _VERTICAL_ALIASES[slug]
+    if _SHIPPER_WORDS.search(slug.replace("-", " ").replace("e commerce", "ecommerce")):
+        return "shipper"
+    return slug

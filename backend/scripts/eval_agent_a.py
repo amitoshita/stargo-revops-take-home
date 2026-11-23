@@ -84,7 +84,14 @@ def main(argv: list[str] | None = None) -> int:
     text = "\n".join(lines)
     print(text)
     if args.write:
-        args.write.write_text(text, encoding="utf-8")
+        # Keep the overview, the held-out section and the hand-written findings.
+        current = args.write.read_text(encoding="utf-8") if args.write.exists() else ""
+        marker = "## Per field"
+        overview = current.split(marker)[0].rstrip() if marker in current else lines[0]
+        rest = current[current.index("## Held-out set") :] if "## Held-out set" in current else ""
+        body = text[text.index(marker) :].rstrip()
+        parts = [p for p in (overview, body, rest.rstrip()) if p]
+        args.write.write_text("\n\n".join(parts) + "\n", encoding="utf-8")
     return 0
 
 

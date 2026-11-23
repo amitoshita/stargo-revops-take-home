@@ -23,6 +23,8 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 - **C3 / C4 when nothing is stated.** No problem stated → C3 `unknown`. A message with no request → C4 `fail` (the evidence exists and shows no ask). C5 with no decision → `unknown`.
 - **C2 function.** Marketing, HR, legal and communications roles fail C2 even at manager level (they do not own pricing, operations, procurement, commercial, finance or digital decisions). An owner/founder title needs a company under 200 employees; with size unknown, C2 is `unknown`.
 
+- **Vertical.** Taken only from the CRM, the CRM company record or what the sender states; never inferred from a company name ("Van der Berg Transport" leaves the vertical unknown). A stated freight buyer (retailer, manufacturer, wholesaler, distributor, importer/exporter, e-commerce) maps to `shipper` (QLS C1 "shippers with material freight spend"); the freight spend stays unverified.
+
 ## Identity and hygiene
 
 - **D16 — Several messages from one person.** Conditions use the union of evidence across messages, except interest (C4), which follows the person's latest stance: a later "not interested" overrides earlier interest (C4 fails → nurture), and a later positive message overrides an earlier "not interested". An unsubscribe in any message overrides everything (`suppressed`). An instruction attempt or a failed analysis in any message → `needs review`. Auto-reply excludes only if every message is an auto-reply.
@@ -33,7 +35,7 @@ Draft generated from docs/PLAN.md §9 and later clarifications. Amit to edit int
 ## Routing
 
 - **D4 — Owners for excluded / suppressed leads.** No owner, except investor → Founders. A suppression log is kept.
-- **D-add — Senders not in the CRM.** Region from the stated country, marked unverified. No country → Triage queue.
+- **D-add — Senders not in the CRM.** Region from the stated country, marked unverified. No country → Triage queue. A country-code email domain (`.nl`, `.de`, `.co.uk`) is never used as a region signal: it is a guess, and unknown stays unknown (QLS §3). A human in the Triage queue decides.
 - **Needs-review routing ignores message content.** When a message is flagged (instruction attempt or failed analysis), the owner comes from CRM / company-record facts only, never from facts stated in that message.
 - **Outside ICP regions → Triage queue** applies to `nurture` leads whose C1 fails only on region (D17), to `needs review` leads, and to leads whose region is unknown.
 - Region mapping: Benelux = NL, BE, LU; Nordics = SE, NO, DK, FI, IS; UK = GB; DACH = DE, AT, CH. APAC outside Singapore routes to Mei but is outside the ICP regions (C1 region fails).

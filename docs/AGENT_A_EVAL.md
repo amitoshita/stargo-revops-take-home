@@ -8,8 +8,10 @@ the end are written by hand.
 disagreements on the 19 seed messages, and the hand labels are mine. The v4 clarifications
 target IN-009 (rate quoting vs benchmarking), IN-011 (owner) and IN-007 (volume). Seed
 agreement is therefore an optimistic, in-sample number. The held-out set below was run
-once, after v4 was frozen (commit `a2c490c`), and nothing was changed after seeing it. It
-is small (6 cases, 7 messages), so it shows failure modes rather than a reliable accuracy.
+once, after v4 was frozen (commit `a2c490c`). The prompt was not changed after seeing it;
+one rules bug it exposed (`normalize_vertical`, see Findings) was fixed afterwards, so H2's
+status is no longer fully out-of-sample. It is small (6 cases, 7 messages), so it shows
+failure modes rather than a reliable accuracy.
 
 ## Per field
 
@@ -68,68 +70,83 @@ No extraction (counted as needs review):
 
 Prompt `agent-a-v4` frozen before this run. 6 cases, 7 messages, through the full pipeline (identity → rules → routing).
 
-Agreement on expected fields: **14/22**.
+- Agreement as recorded (expected labels unchanged): **15/22**.
+- Agreement with the expected-label errors corrected: **20/22**.
 
-| Case | Field | Expected | Got | Same |
-|---|---|---|---|---|
-| H1 | intent | demo | demo | ✔ |
-| H1 | problem | document_extraction | document_extraction | ✔ |
-| H1 | buyer_role | Owner | Owner | ✔ |
-| H1 | status | QL candidate | nurture | ✘ |
-| H1 | owner | Dana | Triage queue | ✘ |
-| H1 | rationale | | Nurture: C1 unknown. Evidence: "Our planners retype CMRs and delivery notes from PDFs into our TMS every day." | |
-| H2 | intent | demo | demo | ✔ |
-| H2 | problem | other | rate_quoting | ✘ |
-| H2 | status | nurture | disqualified | ✘ |
-| H2 | owner | Sam | — | ✘ |
-| H2 | rationale | | Disqualified: C1 vertical home-goods-retail is not an ICP vertical. Evidence: vertical home-goods-retail (stated, unverified) | |
-| H3 | language | de | de | ✔ |
-| H3 | intent | pilot | pilot | ✔ |
-| H3 | problem | invoice_reconciliation | invoice_reconciliation | ✔ |
-| H3 | status | QL candidate | nurture | ✘ |
-| H3 | owner | Leo | Triage queue | ✘ |
-| H3 | rationale | | Nurture: C1 unknown. Evidence: "Wir prüfen jeden Monat Hunderte Frachtrechnungen manuell gegen unsere Verträge." (We che… | |
-| H4 | intent | pricing | pricing | ✔ |
-| H4 | problem | rate_quoting | rate_quoting | ✔ |
-| H4 | status | nurture | nurture | ✔ |
-| H4 | owner | Triage queue | Triage queue | ✔ |
-| H4 | rationale | | Nurture: C1 country FR is outside ICP regions; C2 unknown. Evidence: vertical freight-forwarder (stated, unverified) | |
-| H5 | status | needs review | needs review | ✔ |
-| H5 | rationale | | needs review: instruction attempt | |
-| H6 | intent (latest) | not interested | not interested | ✔ |
-| H6 | status | nurture | nurture | ✔ |
-| H6 | owner | Leo | Triage queue | ✘ |
-| H6 | rationale | | Nurture: C4 latest stance: not interested; C1, C2 unknown. Evidence: "Can we see a demo?" | |
+| Case | Field | Expected | Got | Same | Note |
+|---|---|---|---|---|---|
+| H1 | intent | demo | demo | ✔ |  |
+| H1 | problem | document_extraction | document_extraction | ✔ |  |
+| H1 | buyer_role | Owner | Owner | ✔ |  |
+| H1 | status | QL candidate | nurture | ✘ | label error → nurture |
+| H1 | owner | Dana | Triage queue | ✘ | label error → Triage queue |
+| H1 | rationale | | Nurture: C1 unknown. Evidence: "Our planners retype CMRs and delivery notes from PDFs into our TMS every day." | | |
+| H2 | intent | demo | demo | ✔ |  |
+| H2 | problem | other | rate_quoting | ✘ |  |
+| H2 | status | nurture | nurture | ✔ |  |
+| H2 | owner | Sam | Triage queue | ✘ |  |
+| H2 | rationale | | Nurture: C1, C2 unknown. Evidence: "Comparing them side by side is still a spreadsheet job." | | |
+| H3 | language | de | de | ✔ |  |
+| H3 | intent | pilot | pilot | ✔ |  |
+| H3 | problem | invoice_reconciliation | invoice_reconciliation | ✔ |  |
+| H3 | status | QL candidate | nurture | ✘ | label error → nurture |
+| H3 | owner | Leo | Triage queue | ✘ | label error → Triage queue |
+| H3 | rationale | | Nurture: C1 unknown. Evidence: "Wir prüfen jeden Monat Hunderte Frachtrechnungen manuell gegen unsere Verträge." (We che… | | |
+| H4 | intent | pricing | pricing | ✔ |  |
+| H4 | problem | rate_quoting | rate_quoting | ✔ |  |
+| H4 | status | nurture | nurture | ✔ |  |
+| H4 | owner | Triage queue | Triage queue | ✔ |  |
+| H4 | rationale | | Nurture: C1 country FR is outside ICP regions; C2 unknown. Evidence: vertical freight-forwarder (stated, unverified) | | |
+| H5 | status | needs review | needs review | ✔ |  |
+| H5 | rationale | | needs review: instruction attempt | | |
+| H6 | intent (latest) | not interested | not interested | ✔ |  |
+| H6 | status | nurture | nurture | ✔ |  |
+| H6 | owner | Leo | Triage queue | ✘ | label error → Triage queue |
+| H6 | rationale | | Nurture: C4 latest stance: not interested; C1, C2 unknown. Evidence: "Can we see a demo?" | | |
+
+### Expected-label errors
+
+The held-out file is unchanged. These expected values contradict decided rules, so the
+second score uses the corrected value; the first score keeps the original label.
+
+- H1 owner: expected 'Dana', corrected 'Triage queue'. Reason: routed from the email's country domain; D-add / QLS §3: region only from a stated country.
+- H1 status: expected 'QL candidate', corrected 'nurture'. Reason: routed from the email's country domain; D-add / QLS §3: region only from a stated country; vertical assumed from the company name; QLS §3: vertical stays unknown unless stated.
+- H3 owner: expected 'Leo', corrected 'Triage queue'. Reason: routed from the email's country domain; D-add / QLS §3: region only from a stated country.
+- H3 status: expected 'QL candidate', corrected 'nurture'. Reason: routed from the email's country domain; D-add / QLS §3: region only from a stated country; vertical assumed from the company name; QLS §3: vertical stays unknown unless stated.
+- H6 owner: expected 'Leo', corrected 'Triage queue'. Reason: routed from the email's country domain; D-add / QLS §3: region only from a stated country.
 
 ## Findings (hand-written)
 
-**Seed (in-sample).** 18 of 19 replies validate. IN-015 (the student) quotes "I would
-love to join Stargo as an intern." while the message says "…student and would love to
-join…": the quote check rejects it, so that lead is `needs review` instead of `excluded`.
-Kept as recorded, not re-rolled. Every other lead has the same status and owner as with
-the hand labels, and the KPI records equal plan §8 (QLs SD-001, 002, 004, 008, 009;
-booked PE-003, 004, 007, 010; held PE-002, 005, 008; opportunities PE-009, 011).
+**Seed (in-sample).** 18 of 19 replies validate. Every lead except one gets the same status
+and owner as with the hand labels, and the KPI records equal plan §8 (QLs SD-001, 002, 004,
+008, 009; booked PE-003, 004, 007, 010; held PE-002, 005, 008; opportunities PE-009, 011).
+A test pins these records to the committed fixtures.
 
-**Held-out (out-of-sample): 14/22 expected fields.** Split by layer:
+**IN-015: a safe failure.** The model quoted "I would love to join Stargo as an intern."
+while the message says "…student and would love to join…". The quote check rejects the
+whole reply, so the lead is `needs review` (a human sees it) instead of `excluded`. Nothing
+is counted, drafted or routed on an invented quote. Kept as recorded, not re-rolled.
 
-- *Agent A extraction:* 10 of 11 extraction fields agree (intent 5/5, problem 3/4,
-  buyer_role 1/1, language 1/1), and layer-1 detection stops H5 before the LLM.
-  The miss is H2: a retailer comparing quotes it *receives* from carriers is labelled
-  `rate_quoting`. That is exactly the case the v4 clarification was written for, so the
-  seed improvement on IN-009 did not generalize. This is the clearest sign of overfitting.
-- *Rules and routing (7 of the 8 misses):*
-  - **H1, H3, H6 owner → Triage queue, expected Dana / Leo / Leo.** None of these
-    messages states a country. The expected owners match the email's country-code domain
-    (`.nl`, `.de`, `.co.uk`). The app only takes a region from a stated country (D-add) and
-    never from the email domain, so it routes to the Triage queue.
-  - **H1, H3 status nurture, expected QL candidate.** C1 is unknown: region unknown (above)
-    and vertical not stated (only implied by the names "Van der Berg Transport" and "Rhein
-    Logistik"). Unknown is not a pass, so the lead is nurture.
-  - **H2 status disqualified, expected nurture.** The stated vertical "home goods retail" is
-    not mapped to `shipper`, although QLS C1 includes "shippers with material freight spend".
-    This is a normalization gap in `normalize_vertical`. The expected owner Sam also needs a
-    US location that neither the message nor the `.com` domain states.
+**Held-out (out-of-sample).** Run once after v4 was frozen. Agent A gets 10 of 11
+extraction fields right, and layer-1 detection stops H5 before the LLM.
 
-Not fixed: changing the prompt or the rules now would tune on the held-out set. The open
-questions (country-code domain as an unverified region signal, vertical from a company
-name, retailer → shipper) are listed for a decision.
+- **Main known weakness, H2.** A retailer comparing quotes it *receives* from carriers is
+  labelled `rate_quoting` instead of `other`. This is the exact case the v4 clarification
+  targets: it fixed IN-009 in the seed set but did not generalize to a new message, which
+  is the clearest sign of overfitting. Accepted and documented, no prompt change. Effect:
+  C3 passes on a wrong reading; the lead is still `nurture` (C2 unknown) and goes to the
+  Triage queue, so a human sees it before anything counts.
+- **Bug found through the held-out set: `normalize_vertical`.** "Home goods retail" was not
+  mapped to `shipper`, although QLS C1 includes shippers with material freight spend, so H2
+  was `disqualified`. Fixed after the held-out run: retailers, manufacturers, wholesalers,
+  distributors, importers/exporters and e-commerce map to `shipper` (freight spend stays
+  unverified). This changed H2's status to `nurture`, as expected. Because the fix was
+  prompted by the held-out set, that one result is no longer fully out-of-sample.
+- **H2 owner (Sam expected, Triage queue got).** Neither the message nor the `.com` domain
+  states a US location, so the app routes to the Triage queue. Counted as a miss in both
+  scores; it is the same pattern as the label errors above but was not confirmed as one.
+- **Expected-label errors (H1, H3, H6).** See the list under the held-out table. These
+  expected owners assumed routing from the email's country domain, and H1/H3's expected
+  status assumed a vertical from the company name. Both contradict decided rules (D-add,
+  QLS §3: unknown stays unknown), so the labels were wrong, not the system. The held-out
+  file is unchanged; both scores are reported.
