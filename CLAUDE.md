@@ -26,6 +26,7 @@ frontend/      # React + TS + Vite
 - Logs must never contain message bodies, emails, names, LinkedIn URLs or prompts. Use record ids and hashes.
 - The only network call allowed is to the configured LLM endpoint. Tests are fully offline (fake LLM).
 - The app must run end to end with no API key (labelled "rules-only fallback mode").
+- Never edit .env or any file containing secrets. If a change is needed there, tell me the exact line and I will make it myself.
 
 ## Workflow
 - Write tests together with the code for each module (pytest / vitest).
