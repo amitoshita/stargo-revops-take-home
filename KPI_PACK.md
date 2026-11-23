@@ -1,7 +1,7 @@
 # Weekly KPI pack
 
 **Week:** Sun 4 Oct – Thu 8 Oct 2026 (Asia/Jerusalem)  
-**Generated:** 2026-11-23 18:57 IL  
+**Generated:** 2026-11-23 19:01 IL  
 **Analysis mode:** recorded fixture
 
 ## Acquisition vs target
@@ -76,7 +76,7 @@ Content brief for the top gap (P6): 'Alternatives to Laneframe for Freight Prici
 
 ## Note to the CRO
 
-We finished the week well short of target: 5 QLs against 25, 4 meetings booked against 15, 3 held against 12, and 2 opportunities against 5. Qualification is not the problem; volume is. Of the ten relevant buyers who contacted us, five became QLs and two more (Marcus Hale, Priya Nair) roll into next week. Event-email follow-up was our strongest source. The historical-reactivation feed did not arrive, so that channel is unknown, not zero.
+We finished the week well short of target: 5 QLs against 25, 4 meetings booked against 15, 3 held against 12, and 2 opportunities against 5. Qualification is not the problem; volume is. Of the nine relevant buyers who contacted us, five became QLs and two more (Marcus Hale, Priya Nair) roll into next week. Event-email follow-up was our strongest source. The historical-reactivation feed did not arrive, so that channel is unknown, not zero.
 
 The biggest AI-visibility gap: when buyers ask ChatGPT, Perplexity or Gemini for alternatives to Laneframe, none of them mention Stargo. These buyers are already planning a switch, so we lose late-stage demand we never see. Two engines also describe Stargo as a travel app or an ocean carrier.
 
