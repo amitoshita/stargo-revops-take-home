@@ -8,7 +8,7 @@ the end are written by hand.
 disagreements on the 19 seed messages, and the hand labels are mine. The v4 clarifications
 target IN-009 (rate quoting vs benchmarking), IN-011 (owner) and IN-007 (volume). Seed
 agreement is therefore an optimistic, in-sample number. The held-out set below was run
-once, after v4 was frozen (commit `a2c490c`). The prompt was not changed after seeing it;
+once, after v4 was frozen (commit `7427240`). The prompt was not changed after seeing it;
 one rules bug it exposed (`normalize_vertical`, see Findings) was fixed afterwards, so H2's
 status is no longer fully out-of-sample. It is small (6 cases, 7 messages), so it shows
 failure modes rather than a reliable accuracy.

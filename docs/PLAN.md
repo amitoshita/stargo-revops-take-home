@@ -5,7 +5,7 @@
 > Revision 2: your decisions on Q1–Q11 are folded in (§9), along with routing for unknown senders and the simplifications. Target is ~16–18 h.
 
 ## Context
-This is option 2 of the setup. The repo (`ac191ec`) holds the spec, data and CLAUDE.md. Before any code, we need a plan you can check against your own hand count. I derived everything below from the repo files only: the spec, `ql_standard.md` (QLS), `brand_context.md` (BC), `DATA_README.md`, the three data files and CLAUDE.md. I did not use the playbook's numbers. Every number in §8 traces back to record ids in §7.
+This is option 2 of the setup. The repo (`ed4b70f`) holds the spec, data and CLAUDE.md. Before any code, we need a plan you can check against your own hand count. I derived everything below from the repo files only: the spec, `ql_standard.md` (QLS), `brand_context.md` (BC), `DATA_README.md`, the three data files and CLAUDE.md. I did not use the playbook's numbers. Every number in §8 traces back to record ids in §7.
 
 Abbreviations: QLS §n = ql_standard section n. C1–C5 = the five QL conditions. IL = Asia/Jerusalem.
 
