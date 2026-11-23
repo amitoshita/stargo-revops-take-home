@@ -177,8 +177,8 @@ FAILURES = [
 
 
 @pytest.mark.parametrize("llm", FAILURES)
-def test_any_failure_is_needs_review_never_ql_or_disqualified(llm: FakeLLM) -> None:
-    """R16: Anouk would be QL; with a broken analysis of her repeat message she is needs review."""
+def test_a_failed_later_message_neither_adds_nor_removes(llm: FakeLLM) -> None:
+    """D16: Anouk is QL; a broken analysis of her repeat message is a flag, not a new status."""
     bundle = seed()
     analyses = {m.id: _label_analysis(m) for m in bundle.inbound}
     analyses["IN-021"] = analyze_message(
@@ -187,9 +187,22 @@ def test_any_failure_is_needs_review_never_ql_or_disqualified(llm: FakeLLM) -> N
     assert analyses["IN-021"].failure is not None
     world = build_world(bundle.crm, bundle.inbound, bundle.decisions, analyses)
     anouk = assess_all(world)["HS-1001"]
-    assert anouk.status == Status.NEEDS_REVIEW
-    assert anouk.owner == "Dana"  # keeps the account/region owner
-    assert anouk.score is None
+    assert (anouk.status, anouk.owner) == (Status.QL, "Dana")
+    assert [f.inbound_id for f in anouk.review_flags] == ["IN-021"]
+    assert anouk.review_flags[0].reason.startswith("analysis failed")
+
+
+@pytest.mark.parametrize("llm", FAILURES)
+def test_a_failed_only_message_is_needs_review_never_ql_or_disqualified(llm: FakeLLM) -> None:
+    """R16: a new person whose only message failed is needs review."""
+    bundle = seed()
+    message = pasted(BY_ID["IN-001"].body, email="new.person@unknown-forwarder.com")
+    analysis = analyze_message(message, client=llm, fixtures=None)
+    assert analysis.failure is not None
+    world = build_world(bundle.crm, [message], [], {message.id: analysis})
+    (result,) = assess_all(world).values()
+    assert result.status == Status.NEEDS_REVIEW
+    assert result.score is None and result.checklist is None
 
 
 def test_hebrew_without_key_is_needs_review_with_owner() -> None:

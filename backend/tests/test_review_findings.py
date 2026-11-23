@@ -176,14 +176,25 @@ def test_plain_first_name(raw: str | None, name: str | None) -> None:
 # ---- 5. a stored message without analysis is needs review ------------------------------
 
 
-def test_missing_analysis_is_needs_review_not_judged_on_the_rest() -> None:
+def test_missing_analysis_is_a_visible_flag() -> None:
     bundle = seed()
     analyses = labelled_analyses(bundle)
     del analyses["IN-021"]  # Anouk's second message was never analysed
     world = build_world(bundle.crm, bundle.inbound, bundle.decisions, analyses)
     anouk = assess_all(world)["HS-1001"]
-    assert anouk.status == Status.NEEDS_REVIEW
-    assert "not_analysed" in anouk.reason
+    assert anouk.status == Status.QL  # judged on IN-001; the gap is flagged, not hidden
+    assert [(f.inbound_id, f.reason) for f in anouk.review_flags] == [
+        ("IN-021", "analysis failed: not analysed")
+    ]
+
+
+def test_missing_only_analysis_is_needs_review() -> None:
+    bundle = seed()
+    analyses = labelled_analyses(bundle)
+    del analyses["IN-012"]  # Noam's only message
+    world = build_world(bundle.crm, bundle.inbound, bundle.decisions, analyses)
+    noam = assess_all(world)["HS-1017"]
+    assert noam.status == Status.NEEDS_REVIEW and "not_analysed" in noam.reason
 
 
 # ---- 6. a feed with no reported status is unknown, not 0 --------------------------------

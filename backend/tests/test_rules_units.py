@@ -274,9 +274,28 @@ def test_failed_analysis_is_needs_review_never_ql(kind: str) -> None:
     assert result.score is None
 
 
-def test_one_failed_message_among_good_ones_is_needs_review() -> None:
+def test_failed_message_among_good_ones_is_a_flag_not_a_status() -> None:
     failure = AnalysisFailure(kind="timeout", detail="x")
-    assert assess(ctx([extraction(), failure])).status == Status.NEEDS_REVIEW
+    result = assess(ctx([extraction(), failure], decisions=[decision()]))
+    assert result.status == Status.QL  # judged on the usable message only
+    assert [(f.inbound_id, f.reason) for f in result.review_flags] == [
+        ("T-2", "analysis failed: timeout")
+    ]
+
+
+def test_only_failed_messages_is_needs_review() -> None:
+    failure = AnalysisFailure(kind="timeout", detail="x")
+    assert assess(ctx([failure])).status == Status.NEEDS_REVIEW
+
+
+def test_unsubscribe_counts_only_from_a_usable_message() -> None:
+    flagged_unsub = extraction(intent="unsubscribe", instruction_attempt=True)
+    result = assess(ctx([extraction(), flagged_unsub], decisions=[decision()]))
+    assert result.status == Status.QL
+    assert result.review_flags[0].reason == "instruction attempt"
+    assert assess(ctx([extraction(), extraction(intent="unsubscribe")])).status == (
+        Status.SUPPRESSED
+    )
 
 
 def test_instruction_attempt_flag_from_agent_a_is_needs_review() -> None:

@@ -1,7 +1,7 @@
 import { formatIL, scoreLabel } from '../lib/format'
 import { href } from '../lib/route'
 import type { LeadRow } from '../lib/types'
-import { Badge, ModeBadges, StatusBadge, TableWrap } from './ui'
+import { Badge, ModeBadges, ReviewFlags, StatusBadge, TableWrap } from './ui'
 
 export function LeadQueue({ rows }: { rows: LeadRow[] }) {
   if (rows.length === 0) return <p className="muted">No leads yet.</p>
@@ -30,6 +30,7 @@ export function LeadQueue({ rows }: { rows: LeadRow[] }) {
                 <div className="badges">
                   <ModeBadges modes={row.analysis_modes} />
                   {row.expansion && <Badge tone="info">expansion</Badge>}
+                  {row.status !== 'needs review' && <ReviewFlags flags={row.review_flags} />}
                 </div>
               </td>
               <td>

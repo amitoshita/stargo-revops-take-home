@@ -275,6 +275,16 @@ def compute_pack(
     needs_review = sum(1 for a in assessments.values() if a.status == Status.NEEDS_REVIEW)
     if needs_review:
         caveats.append(f"{needs_review} lead(s) in needs review are not counted until decided.")
+    flagged = [
+        f"{pid} ({', '.join(f.inbound_id for f in a.review_flags)})"
+        for pid, a in sorted(assessments.items())
+        if a.review_flags and a.status != Status.NEEDS_REVIEW
+    ]
+    if flagged:
+        caveats.append(
+            "Messages awaiting review (they change nothing until a human decides): "
+            + "; ".join(flagged)
+        )
 
     return KpiPack(
         week_start=window.sunday,

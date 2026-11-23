@@ -89,6 +89,22 @@ class MessageAnalysis(_Strict):
             self.extraction and self.extraction.instruction_attempt
         )
 
+    @property
+    def usable(self) -> bool:
+        """A successful analysis with no instruction attempt: the only kind that is evidence."""
+        return self.extraction is not None and self.failure is None and not self.instruction_attempt
+
+    @property
+    def review_reason(self) -> str | None:
+        """Why this message needs a human, or None if it is usable evidence."""
+        if self.instruction_attempt:
+            return "instruction attempt"
+        if self.failure is not None:
+            return f"analysis failed: {self.failure.kind.replace('_', ' ')}"
+        if self.extraction is None:
+            return "not analysed"
+        return None
+
 
 class AgentBOutput(_Strict):
     """Qualification and routing for one person. Rules decide; the LLM may only draft."""

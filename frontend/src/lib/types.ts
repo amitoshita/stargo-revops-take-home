@@ -35,6 +35,12 @@ export interface LeadRow {
   analysis_modes: AnalysisMode[]
   expansion: boolean
   accepted_by: string | null
+  review_flags: ReviewFlag[]
+}
+
+export interface ReviewFlag {
+  inbound_id: string
+  reason: string
 }
 
 export interface Evidence {
@@ -107,6 +113,7 @@ export interface Assessment {
   rationale: string
   accepted_by: { decision_id: string; decided_by: string; decided_at: string } | null
   expansion: boolean
+  review_flags: ReviewFlag[]
 }
 
 export interface Decision {

@@ -265,7 +265,7 @@ class Service:
     def latest_extraction(snap: Snapshot, person_id: str) -> AgentAOutput | None:
         ctx = snap.world.leads[person_id]
         for analysis in reversed(ctx.analyses):
-            if analysis.extraction is not None:
+            if analysis.usable:  # a flagged message never feeds a draft
                 return analysis.extraction
         return None
 

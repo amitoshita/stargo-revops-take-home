@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.agents.schemas import AgentBOutput, MessageAnalysis
 from app.core.enums import AnalysisMode, Channel, Source, Status
 from app.ingest.schemas import CrmContact, IngestError, PipelineEvent, SalesDecision
-from app.rules.schemas import Assessment, Band
+from app.rules.schemas import Assessment, Band, ReviewFlag
 
 
 class _In(BaseModel):
@@ -58,6 +58,7 @@ class LeadRow(BaseModel):
     analysis_modes: list[AnalysisMode]
     expansion: bool
     accepted_by: str | None
+    review_flags: list[ReviewFlag]  # messages awaiting a human; they change nothing until then
 
 
 class MessageOut(BaseModel):

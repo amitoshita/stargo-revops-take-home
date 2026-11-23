@@ -45,6 +45,7 @@ def lead_row(snap: Snapshot, person_id: str) -> LeadRow:
         analysis_modes=ran_modes(ctx.analyses),
         expansion=assessment.expansion,
         accepted_by=assessment.accepted_by.decided_by if assessment.accepted_by else None,
+        review_flags=assessment.review_flags,
     )
 
 

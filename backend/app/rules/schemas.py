@@ -78,6 +78,13 @@ class AcceptedBy(_Frozen):
     decided_at: AwareDatetime
 
 
+class ReviewFlag(_Frozen):
+    """A message that needs a human. It adds no evidence and removes none (D16)."""
+
+    inbound_id: str
+    reason: str  # e.g. "instruction attempt", "analysis failed: fallback unsupported"
+
+
 class Assessment(_Frozen):
     status: Status
     reason: str  # short machine-friendly reason code, e.g. "excluded:customer"
@@ -91,3 +98,4 @@ class Assessment(_Frozen):
     accepted_by: AcceptedBy | None = None
     expansion: bool = False
     assessed_at: datetime | None = None
+    review_flags: list[ReviewFlag] = Field(default_factory=list)

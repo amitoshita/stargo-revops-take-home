@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { statusTone } from '../lib/format'
-import type { AnalysisMode, Status } from '../lib/types'
+import type { AnalysisMode, ReviewFlag, Status } from '../lib/types'
 
 export function Badge({ tone, children, title }: { tone: string; children: ReactNode; title?: string }) {
   return (
@@ -27,6 +27,19 @@ export function ModeBadges({ modes }: { modes: AnalysisMode[] }) {
       {modes.map((m) => (
         <Badge key={m} tone={MODE_TONE[m]}>
           {m}
+        </Badge>
+      ))}
+    </>
+  )
+}
+
+export function ReviewFlags({ flags }: { flags: ReviewFlag[] }) {
+  if (flags.length === 0) return null
+  return (
+    <>
+      {flags.map((f) => (
+        <Badge key={f.inbound_id} tone="warn" title="Changes nothing until a human reviews it">
+          needs review: {f.reason} ({f.inbound_id})
         </Badge>
       ))}
     </>

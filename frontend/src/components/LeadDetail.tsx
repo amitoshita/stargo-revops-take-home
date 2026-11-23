@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api, ApiError } from '../lib/api'
 import { formatIL, ilLocalToIso, nowILLocal, scoreLabel, triIcon } from '../lib/format'
 import type { Assessment, Checklist, Draft, Extraction, LeadDetail as Detail, Message } from '../lib/types'
-import { Badge, Errors, ModeBadges, Section, StatusBadge, TableWrap } from './ui'
+import { Badge, Errors, ModeBadges, ReviewFlags, Section, StatusBadge, TableWrap } from './ui'
 
 const CONDITIONS: [keyof Checklist, string][] = [
   ['c1_company_fit', 'C1 Company fit'],
@@ -28,6 +28,19 @@ export function LeadDetailView({ detail, onChange }: { detail: Detail; onChange:
           <Badge tone={a.band === 'A' ? 'good' : 'muted'}>score {scoreLabel(a.score, a.band)}</Badge>
           {a.accepted_by && <Badge tone="info">accepted by {a.accepted_by.decided_by}</Badge>}
         </div>
+        {a.review_flags.length > 0 && (
+          <div className="banner banner-warn">
+            <div className="badges">
+              <ReviewFlags flags={a.review_flags} />
+            </div>
+            {a.status !== 'needs review' && (
+              <span className="small">
+                Flagged messages add no evidence and remove none: the status below comes from the
+                other messages until a human reviews them.
+              </span>
+            )}
+          </div>
+        )}
         <p className="rationale">{a.rationale}</p>
         <p className="muted small">Owner basis: {a.owner_basis}</p>
       </section>

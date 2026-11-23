@@ -22,6 +22,7 @@ const row: LeadRow = {
   analysis_modes: ['recorded fixture'],
   expansion: false,
   accepted_by: 'Sam',
+  review_flags: [],
 }
 
 describe('LeadQueue', () => {
@@ -41,6 +42,15 @@ describe('LeadQueue', () => {
     expect(html).toContain('—')
     expect(html).toContain('unknown')
     expect(html).not.toMatch(/>0</)
+  })
+})
+
+describe('review flags', () => {
+  it('shows a flag on a QL in the queue without changing its status', () => {
+    const flagged = { ...row, review_flags: [{ inbound_id: 'UI-IN-007', reason: 'analysis failed: fallback unsupported' }] }
+    const html = renderToStaticMarkup(<LeadQueue rows={[flagged]} />)
+    expect(html).toContain('>QL<')
+    expect(html).toContain('needs review: analysis failed: fallback unsupported (UI-IN-007)')
   })
 })
 
@@ -93,6 +103,7 @@ const detail: LeadDetail = {
     rationale: 'needs review: instruction attempt',
     accepted_by: null,
     expansion: false,
+    review_flags: [{ inbound_id: 'UI-IN-001', reason: 'instruction attempt' }],
   },
   decisions: [],
   draft: null,

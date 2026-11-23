@@ -1,7 +1,8 @@
 """Assess one person: exclusions → QL gate → status → owner → score → rationale.
 
-Precedence (docs/ASSUMPTIONS.md D16): unsubscribe anywhere → suppressed; an instruction
-attempt or a failed analysis anywhere → needs review; then exclusions; then the gate.
+Precedence (docs/ASSUMPTIONS.md D16): only usable (successfully analysed, unflagged)
+messages are evidence. None usable → needs review. Otherwise: unsubscribe in a usable
+message → suppressed; then exclusions; then the gate. Flagged messages become review flags.
 """
 
 from __future__ import annotations
@@ -14,7 +15,14 @@ from app.rules.exclusions import find_exclusion
 from app.rules.ql_gate import build_checklist
 from app.rules.rationale import build_rationale
 from app.rules.routing import route
-from app.rules.schemas import AcceptedBy, Assessment, Band, QLChecklist, ScoreFactor
+from app.rules.schemas import (
+    AcceptedBy,
+    Assessment,
+    Band,
+    QLChecklist,
+    ReviewFlag,
+    ScoreFactor,
+)
 from app.rules.scoring import score
 
 SCORED_STATUSES = frozenset({Status.QL, Status.QL_CANDIDATE, Status.NURTURE})
@@ -57,31 +65,41 @@ def _accepted_by(ctx: LeadContext) -> AcceptedBy | None:
 
 
 def assess(ctx: LeadContext) -> Assessment:
+    """D16: only successfully analysed messages are evidence. A failed or flagged message adds
+    nothing and removes nothing; it raises a review flag. If no message is usable, the lead
+    is needs review, routed on CRM facts only."""
     exclusion = None
     checklist: QLChecklist | None = None
+    flags = [
+        ReviewFlag(inbound_id=a.inbound_id, reason=reason)
+        for a in ctx.analyses
+        if (reason := a.review_reason) is not None
+    ]
+    usable = [a for a in ctx.analyses if a.usable]
+    evidence_ctx = replace(ctx, analyses=usable)
 
-    if any(e.intent == Intent.UNSUBSCRIBE for e in ctx.extractions):
+    if not usable:
+        if any(a.instruction_attempt for a in ctx.analyses):
+            status, reason = Status.NEEDS_REVIEW, "needs_review:instruction_attempt"
+        else:
+            kinds = sorted({a.failure.kind for a in ctx.analyses if a.failure}) or ["not_analysed"]
+            status, reason = Status.NEEDS_REVIEW, "needs_review:analysis_failed:" + ",".join(kinds)
+    elif any(e.intent == Intent.UNSUBSCRIBE for e in evidence_ctx.extractions):
         status, reason = Status.SUPPRESSED, "suppressed:unsubscribe"
-    elif any(a.instruction_attempt for a in ctx.analyses):
-        status, reason = Status.NEEDS_REVIEW, "needs_review:instruction_attempt"
-    elif any(a.failure is not None for a in ctx.analyses):
-        kinds = sorted({a.failure.kind for a in ctx.analyses if a.failure})
-        status, reason = Status.NEEDS_REVIEW, "needs_review:analysis_failed:" + ",".join(kinds)
-    elif (exclusion := find_exclusion(ctx)) is not None:
+    elif (exclusion := find_exclusion(evidence_ctx)) is not None:
         status, reason = Status.EXCLUDED, f"excluded:{exclusion.kind}"
-        checklist = build_checklist(ctx)
+        checklist = build_checklist(evidence_ctx)
     else:
-        checklist = build_checklist(ctx)
-        status, reason = _gate_status(checklist, ctx)
+        checklist = build_checklist(evidence_ctx)
+        status, reason = _gate_status(checklist, evidence_ctx)
 
-    # An instruction attempt must not influence the owner: route on CRM facts only.
-    routing_ctx = replace(ctx, analyses=[]) if status == Status.NEEDS_REVIEW else ctx
-    owner = route(routing_ctx, status, exclusion)
+    # Flagged messages never influence the owner: evidence_ctx holds usable messages only.
+    owner = route(evidence_ctx, status, exclusion)
     total: int | None = None
     band: Band | None = None
     factors: list[ScoreFactor] = []
     if status in SCORED_STATUSES:
-        total, band, factors = score(ctx)
+        total, band, factors = score(evidence_ctx)
 
     readable = exclusion.label if exclusion else reason.split(":", 1)[-1].replace("_", " ")
     return Assessment(
@@ -96,4 +114,5 @@ def assess(ctx: LeadContext) -> Assessment:
         rationale=build_rationale(status, readable, checklist),
         accepted_by=_accepted_by(ctx),
         expansion=exclusion is not None and exclusion.kind == "customer",
+        review_flags=flags,
     )
