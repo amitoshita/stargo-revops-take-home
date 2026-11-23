@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
+import os
 import socket
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -62,3 +64,17 @@ def test_short_hash_stable() -> None:
 def test_network_is_blocked() -> None:
     with pytest.raises(RuntimeError):
         socket.create_connection(("example.com", 80))
+
+
+def test_dotenv_last_value_wins_and_env_beats_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core import config
+
+    env = tmp_path / ".env"
+    env.write_text("GROQ_API_KEY=\nLLM_MODEL=a\n# note\nGROQ_API_KEY=gsk_filled\n")
+    monkeypatch.setenv("GROQ_API_KEY", "")  # registered, so teardown restores the original
+    monkeypatch.setenv("LLM_MODEL", "from-env")
+    config._load_dotenv(env)
+    assert os.environ["GROQ_API_KEY"] == "gsk_filled"
+    assert os.environ["LLM_MODEL"] == "from-env"

@@ -13,15 +13,23 @@ DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
 
 
 def _load_dotenv(path: Path) -> None:
-    """Minimal .env reader: KEY=VALUE lines, no interpolation. Existing env vars win."""
+    """Minimal .env reader: KEY=VALUE lines, no interpolation.
+
+    Within the file the last line for a key wins (so a filled-in key below the copied
+    example's blank line is used). Real environment variables win over the file.
+    """
     if not path.is_file():
         return
+    values: dict[str, str] = {}
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    for key, value in values.items():
+        if not os.environ.get(key):
+            os.environ[key] = value
 
 
 @dataclass(frozen=True)
