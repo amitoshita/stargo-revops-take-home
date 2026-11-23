@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.core.enums import AnalysisMode, Source
 from app.ingest.schemas import FeedStatus
@@ -38,6 +38,7 @@ class KpiMetric(_Frozen):
     target: int
     records: list[RecordRef]
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def gap(self) -> int:
         return self.actual - self.target

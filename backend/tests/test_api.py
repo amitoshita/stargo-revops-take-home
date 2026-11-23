@@ -75,6 +75,8 @@ def test_lead_detail(api: TestClient) -> None:
 
 def test_kpi_matches_plan(api: TestClient) -> None:
     assert qls(api) == ["SD-001", "SD-002", "SD-004", "SD-008", "SD-009"]
+    metrics = api.get("/api/kpi").json()["metrics"]
+    assert [m["gap"] for m in metrics] == [-20, -11, -9, -3]  # gap is in the API, not just md
     md = api.get("/api/kpi/markdown").text
     assert "SD-008" in md and "Note to the CRO" in md
     assert "**Analysis mode:** recorded fixture\n" in md  # IN-010's injection stop ran nothing
