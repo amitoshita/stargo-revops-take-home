@@ -51,25 +51,38 @@ cd backend && uv run ruff check . && uv run mypy && uv run pytest
 cd frontend && npx tsc -b && npx eslint . && npx vitest run
 ```
 
-The tests are fully offline. Outbound sockets are blocked in `conftest.py`, and LLM calls
-use a fake. There are about 400 backend tests and 18 frontend tests.
+All tests run offline. Outbound sockets are blocked in `conftest.py`, and LLM calls use a
+fake.
 
 ## How it works
 
 ```
 seed files / paste form
    → ingest: validate (reject with reasons) → normalize → identity (email / LinkedIn only)
-   → injection check (code; a hit stops here: needs review, no LLM call)
+   → injection check (code; a hit stops that message here: flagged, no LLM call)
    → Agent A: recorded fixture | LLM | keyword fallback
         JSON → Pydantic schema → every evidence quote must be in the message
-        any failure → needs review
-   → rules (code): exclusions → QL gate C1–C5 → status → owner → score → rationale
+        any failure → that message is flagged
+   → rules (code), on usable messages only (analysed, no instruction attempt):
+        exclusions → QL gate C1–C5 → status → owner → score → rationale
+        flagged messages add no evidence and remove none; no usable message → needs review
    → Agent B: packages the rules result; LLM writes only the reply draft, from Agent A's
      fields and CRM facts, never the raw message; a draft is stored, never sent
    → storage (SQLite) → KPI (window in Asia/Jerusalem, record ids for every number)
 GEO (separate): ai_answers.json → findings → gap ranking → brief (LLM | template)
    → claim validator (code) blocks or flags
 ```
+
+**Several messages from one person.** The lead is judged on its usable messages only. A
+message whose analysis failed, or that contains an instruction attempt, becomes a "needs
+review" flag with its message id and reason. The flag shows in the queue, on the lead page
+and in the KPI caveats, but it does not change the status, owner, score or KPI. So a
+garbage reply or an injected message from an accepted lead cannot take it out of the
+count; the pack changes only through sales decisions dated in the week.
+
+**Sales decisions.** A decision belongs to a person and is matched by normalized email or
+LinkedIn URL, so a LinkedIn-only sender can be accepted and counts once. Seed decisions
+keep their contact email.
 
 **Code vs LLM.** The LLM reads free text (Agent A) and writes prose: reply drafts and the
 brief. Everything that must be exact or auditable is code: validation, identity, time, the
@@ -118,6 +131,12 @@ tables that scroll inside their card.
   reply", not automatically. A GET never calls the LLM, and startup makes no LLM calls.
 - **Frontend tooling.** ESLint instead of the template's oxlint, as CLAUDE.md asks.
   TypeScript is pinned to 6.0 because typescript-eslint does not support 7 yet.
+- **Multi-message rule (D16).** The plan made a lead `needs review` if any of its messages
+  failed analysis or contained an instruction attempt. Revised by Amit's decision: such a
+  message is a visible flag and changes nothing; only a lead with no usable message is
+  `needs review`.
+- **Decisions by person.** The plan keyed decisions by contact email. They now match a
+  person by email or LinkedIn, as the brief allows either to be blank.
 - **Brief generation.** If Groq's JSON mode rejects a long reply, it retries once without
   JSON mode. The reply is still parsed, schema-validated and checked by the validator.
 
