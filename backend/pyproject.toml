@@ -32,7 +32,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]  # Hebrew/Dutch fixtures contain non-ASC
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-files = ["app", "tests"]
+files = ["app", "tests", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

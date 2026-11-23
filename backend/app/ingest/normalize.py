@@ -167,6 +167,11 @@ def _country_names() -> dict[str, str]:
     return names
 
 
+def country_name(code: str) -> str:
+    """English country name for an ISO-2 code (the code itself if unknown)."""
+    return _country_names().get(code, code)
+
+
 def stated_country_name(value: str | None) -> str | None:
     """A stated location as a country name: 'Haifa' -> 'Israel'. Unrecognised text is kept."""
     if value is None or not value.strip():
