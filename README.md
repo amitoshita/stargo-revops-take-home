@@ -1,5 +1,7 @@
 # Stargo RevOps take-home
 
+Amit Levy · RevOps Engineer (AI-native Marketing Brain) take-home
+
 A small app that turns raw GTM signals into qualified, routed leads, an honest weekly KPI
 pack, and a ranked list of AI-visibility gaps with a validated content brief.
 
