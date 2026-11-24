@@ -27,7 +27,7 @@ seed messages. Delete the file to start over.
 - Seed messages use recorded LLM answers (`backend/fixtures/`), labelled "recorded fixture".
 - Pasted messages are read by keyword rules. These are English only; anything else goes
   to `needs review`.
-- Reply drafts and the brief use templates.
+- Reply drafts use templates. The GEO brief shown is the recorded LLM brief (labelled "recorded fixture"); with a key it can be regenerated.
 
 **With a key.** Copy `.env.example` to `.env` **in the repository root** (next to this
 README, not in `backend/`) and set `GROQ_API_KEY`. Restart the backend. Pasted messages,
