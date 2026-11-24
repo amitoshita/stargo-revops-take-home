@@ -241,6 +241,11 @@ a 390 px layout don't justify a dependency.
 ## Known limitations
 
 - The keyword fallback reads English only; other languages go to `needs review`, by design.
+  It reads company facts only from the sender's own description ("a German freight
+  forwarder", "a Singapore 3PL", "based in Haifa"), never from the email domain.
+- Groq's free tier rate-limits bursts. On HTTP 429 the client waits for `Retry-After`
+  (at most 10 s) and retries once. If it is still limited, that message is flagged
+  `needs review` with the reason shown; nothing is guessed.
 - The claim validator checks tags, figures and the BC-5 rules, not meaning. A paraphrase
   that goes slightly beyond its source can pass, so a human reviews before publishing.
 - The outcome-promise check on reply drafts is a word list (English and a few Hebrew

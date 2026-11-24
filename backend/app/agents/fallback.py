@@ -14,7 +14,7 @@ from collections.abc import Iterable
 from app.agents.schemas import AgentAOutput, AnalysisFailure, Evidence, InterestLevel, StatedFacts
 from app.agents.schemas import TimingHorizon as Timing
 from app.core.enums import Intent, ProblemCategory
-from app.ingest.normalize import country_from_text, country_name
+from app.ingest.normalize import country_from_text, country_name, normalize_country
 
 _EN_WORDS = frozenset(
     {
@@ -104,6 +104,13 @@ _VERTICALS = {
 }  # fmt: skip
 
 
+_TITLE_AT = re.compile(
+    r"(?<!our )(?<!Our )(?<!my )(?<!My )(?<!their )(?<!Their )"
+    r"\b((?:VP|SVP|EVP|Vice President|Director|Head|Chief|CEO|COO|CFO|CTO|Founder|Owner|"
+    r"Manager|General Manager|Managing Director)\b[A-Za-z &]{0,40}?) at (?:a|an|our|the)\b"
+)
+
+
 def _role(sentences: list[str]) -> tuple[str | None, str | None]:
     for sentence in sentences:
         if match := re.search(r"\bI own an?\b", sentence, re.IGNORECASE):
@@ -115,28 +122,70 @@ def _role(sentences: list[str]) -> tuple[str | None, str | None]:
             return match.group(1).strip(), sentence
         if match := re.search(r"\bI run ([a-z ]{3,60}?)(?: at\b|[,.]|$)", sentence, re.I):
             return f"runs {match.group(1).strip()}", sentence
+        # A title without "I am": "VP Operations at a Singapore 3PL", "Director of Ops at ...".
+        if match := re.search(_TITLE_AT, sentence):
+            return match.group(1).strip(), sentence
     return None, None
+
+
+# Words allowed between "a/an/our" and the vertical in a self-description: size words and a
+# country ("a 40-person customs brokerage", "a German freight forwarder", "a Singapore 3PL").
+# Anything else ("a few carrier quotes") is not the sender describing their company.
+_DEMONYMS = {
+    "dutch": "NL", "belgian": "BE", "swedish": "SE", "norwegian": "NO", "danish": "DK",
+    "finnish": "FI", "british": "GB", "scottish": "GB", "german": "DE", "austrian": "AT",
+    "swiss": "CH", "singaporean": "SG", "american": "US", "israeli": "IL", "french": "FR",
+    "spanish": "ES", "italian": "IT", "polish": "PL", "irish": "IE", "portuguese": "PT",
+    "australian": "AU", "japanese": "JP", "chinese": "CN", "indian": "IN", "canadian": "CA",
+}  # fmt: skip
+_SIZE_WORD = re.compile(
+    r"\d[\d,]*(-person)?|person|small|mid-?sized?|midsize|large|global|regional|independent|"
+    r"leading|growing|family-owned",
+    re.IGNORECASE,
+)
+
+
+def _place_code(word: str) -> str | None:
+    word = word.removesuffix("-based")
+    return _DEMONYMS.get(word.lower()) or normalize_country(word)
+
+
+def _self_description(text: str) -> tuple[str | None, str | None]:
+    """(vertical, ISO-2 country) from "a/an/our <size or country words> <vertical>"."""
+    for key, vertical in _VERTICALS.items():
+        pattern = rf"\b(?:a|an|our)\s+((?:[\w-]+\s+){{0,2}}?){key}\b"
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            words = match.group(1).split()
+            codes = [_place_code(w) for w in words]
+            if all(c or _SIZE_WORD.fullmatch(w) for w, c in zip(words, codes, strict=True)):
+                return vertical, next((c for c in codes if c), None)
+    return None, None
+
+
+def _stated_country(text: str, sentences: list[str], described: str | None) -> str | None:
+    """Only from the sender's own words ("in Haifa", "a German forwarder", "Rotterdam-based",
+    "based in Denmark"); never from the email domain (docs/ASSUMPTIONS.md, D-add)."""
+    if code := country_from_text(" ".join(s for s in sentences if re.search(r"\bin\b", s))):
+        return code
+    if described:
+        return described
+    if match := re.search(r"\b([A-Z][a-z]+)-based\b", text):
+        return _place_code(match.group(1))
+    return None
 
 
 def _facts(text: str, sentences: list[str]) -> tuple[StatedFacts, str | None]:
     employees = None
     quote = None
-    if match := re.search(r"\b(\d[\d,]*)[- ](?:person|people|employee)", text, re.IGNORECASE):
+    size = r"\b(\d[\d,]*)[- ](?:person|people|employees?|staff|ftes?)\b"
+    if match := re.search(size, text, re.IGNORECASE):
         employees = int(match.group(1).replace(",", ""))
-    # Only a self-description counts ("a 40-person customs brokerage"), not "carrier quotes".
-    vertical = next(
-        (
-            v
-            for k, v in _VERTICALS.items()
-            if re.search(rf"\b(a|an|our)\s+(\d[\d,]*[- ]person\s+)?{k}\b", text, re.IGNORECASE)
-        ),
-        None,
-    )
+    vertical, described = _self_description(text)
     vendor = bool(re.search(r"\bwe (build|make|sell|develop)\b[^.]*\bsoftware\b", text, re.I))
-    code = country_from_text(" ".join(s for s in sentences if re.search(r"\bin\b", s)))
+    code = _stated_country(text, sentences, described)
     country = country_name(code) if code else None
     if employees or vertical or vendor or country:
-        quote = _find(sentences, [r"\d[- ](person|people|employee)", r"\bsoftware\b",
+        quote = _find(sentences, [size, r"\bsoftware\b",
                                   *(rf"\b{k}\b" for k in _VERTICALS)])  # fmt: skip
     facts = StatedFacts(
         employees=employees, vertical=vertical, country=country, is_software_vendor=vendor

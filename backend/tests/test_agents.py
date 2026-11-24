@@ -279,6 +279,34 @@ def test_fallback_states_country_not_city() -> None:
     assert (result.company_facts.employees, result.buyer_role) == (40, "Owner")
 
 
+@pytest.mark.parametrize(
+    ("body", "role", "vertical", "country", "employees"),
+    [
+        ("Hi, I'm Head of Pricing at a German freight forwarder, about 300 people. Demo?",
+         "Head of Pricing", "freight forwarder", "Germany", 300),
+        ("VP Operations at a Singapore 3PL, 800 staff. Open to a pilot this quarter.",
+         "VP Operations", "3pl", "Singapore", 800),
+        ("I'm the COO at a Rotterdam-based freight forwarder with 90 employees. Demo please.",
+         "COO", "freight forwarder", "Netherlands", 90),
+        ("Director of Ops at a freight forwarder with 150 people. Can I see a demo?",
+         "Director of Ops", "freight forwarder", None, 150),
+        # Not a self-description: no vertical, no country, no role.
+        ("We compare a few carrier quotes every week and ship to Germany. Demo?",
+         None, None, None, None),
+        ("Our Head of Pricing at the head office asked me to write. Demo?", None, None, None, None),
+    ],
+)  # fmt: skip
+def test_fallback_reads_only_the_senders_own_description(
+    body: str, role: str | None, vertical: str | None, country: str | None, employees: int | None
+) -> None:
+    result = fallback.extract(None, body)
+    assert isinstance(result, AgentAOutput)
+    facts = result.company_facts
+    assert (result.buyer_role, facts.vertical, facts.country, facts.employees) == (
+        role, vertical, country, employees,
+    )  # fmt: skip
+
+
 @pytest.mark.parametrize("inbound_id", ["IN-012", "IN-013"])
 def test_fallback_refuses_non_english(inbound_id: str) -> None:
     message = BY_ID[inbound_id]

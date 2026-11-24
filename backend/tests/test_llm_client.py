@@ -7,16 +7,21 @@ import logging
 import httpx
 import pytest
 
-from app.agents.llm_client import GroqClient, LLMError, check_endpoint
+from app.agents.llm_client import MAX_WAIT_S, GroqClient, LLMError, check_endpoint
 
 SECRET_PROMPT = "Anouk says: 400 spot rate requests a week"
 KEY = "gsk_test_key_should_never_be_logged"
 
 
 def client(
-    handler: httpx.MockTransport, base: str = "https://api.groq.com/openai/v1"
+    handler: httpx.MockTransport,
+    base: str = "https://api.groq.com/openai/v1",
+    waits: list[float] | None = None,
 ) -> GroqClient:
-    return GroqClient(api_key=KEY, base_url=base, model="m", timeout_s=1, transport=handler)
+    sink = waits if waits is not None else []
+    return GroqClient(
+        api_key=KEY, base_url=base, model="m", timeout_s=1, transport=handler, sleep=sink.append
+    )
 
 
 def ok(content: str = '{"a": 1}') -> httpx.Response:
@@ -76,6 +81,45 @@ def test_failures_map_to_kinds(raise_or_status: Exception | int, kind: str, call
         client(httpx.MockTransport(handler)).complete("s", "u", json_mode=True, ref="r")
     assert info.value.kind == kind
     assert count == calls
+
+
+@pytest.mark.parametrize(
+    ("headers", "expected_wait"),
+    [
+        ({"retry-after": "3"}, 3.0),
+        ({"retry-after": "0.5"}, 0.5),
+        ({"retry-after": "120"}, MAX_WAIT_S),  # capped: a paste never hangs for minutes
+        ({"retry-after": "soon"}, 2.0),  # unparseable -> default
+        ({}, 2.0),
+    ],
+)
+def test_429_waits_for_retry_after_then_succeeds(
+    headers: dict[str, str], expected_wait: float
+) -> None:
+    replies = [httpx.Response(429, headers=headers, json={"error": "rate"}), ok()]
+    waits: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return replies.pop(0)
+
+    result = client(httpx.MockTransport(handler), waits=waits).complete(
+        "s", "u", json_mode=True, ref="r"
+    )
+    assert result == '{"a": 1}'
+    assert waits == [expected_wait]
+
+
+def test_no_wait_after_the_last_attempt_or_a_non_retryable_status() -> None:
+    waits: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"error": "bad key"})
+
+    with pytest.raises(LLMError):
+        client(httpx.MockTransport(handler), waits=waits).complete(
+            "s", "u", json_mode=True, ref="r"
+        )
+    assert waits == []
 
 
 @pytest.mark.parametrize(
